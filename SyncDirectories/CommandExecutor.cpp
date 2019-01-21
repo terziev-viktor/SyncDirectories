@@ -35,5 +35,5 @@ CommandResult cmds::CommandExecutor::Execute(const std::string & command, int ar
 			return commands[i]->Execute(argc, argv);
 		}
 	}
-	throw std::exception("Not a command");
+	throw "Not a command";
 }

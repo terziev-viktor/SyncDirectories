@@ -15,11 +15,18 @@ namespace cmds
 	private:
 		std::string trigger;
 	public:
-		Command(const std::string & trigger);
-		virtual ~Command();
+		Command(const std::string & trigger)
+		{
+			this->trigger = trigger;
+		}
+		virtual ~Command() {}
+		
 		virtual CommandResult Execute(int argc, char * argv[]) const = 0;
 
-		const std::string & GetTrigger() const;
+		const std::string & GetTrigger() const
+		{
+			return this->trigger;
+		}
 	};
 
 }
