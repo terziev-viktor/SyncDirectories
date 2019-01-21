@@ -1,83 +1,59 @@
+#include "HashValue.h"
+
 #include <string>
 #include <vector>
+#include <unordered_map>
+#include <experimental/filesystem>
+using namespace std::experimental::filesystem;
 using std::vector;
 using std::string;
+using std::unordered_map;
 
+// Using this Idea:
+// http://crypto.cs.mcgill.ca/~crepeau/CS250/2004/HW5+.pdf
 namespace dirtree
 {
-    enum EntityType
-    {
-        Unknown, Folder, File
-    };
+	enum EntityType
+	{
+		Folder, File
+	};
 
-    class Entity
-    {
-    public:
-        Entity()
-        {
-            this->Type = EntityType::Unknown;
-        }
+	struct Entity
+	{
+		// For convenience in the algorithm Im using
+		Entity()
+		{
+			this->Type = Folder;
+		}
+		vector<string> Subdirectories;
 
-        Entity(EntityType type)
-        {
-            this->Type = type;
-        }
+		v1::path Path;
 
-        Entity(string Name, EntityType Type)
-        {
-            this->Name = Name;
-            this->Type = Type;
-        }
+		bool Check; // meta data
 
-        string Name;
+		EntityType Type;
 
-        EntityType Type;
-    };
+		vector<HashValue> Hash;
+	};
 
-    class Folder : public Entity
-    {
-    public:
-        Folder():Entity(EntityType::Folder) 
-        {}
+	// Level in the directory tree
+	// Mapping the name of the file/directory to an Entity object
+	typedef unordered_map<string, Entity> Level;
 
-        Folder(string name):Entity(name, EntityType::Folder)
-        {}
+	// Rows of Levels
+	// So the Level 0 is the root and level 1 are the sub directories of the root and so on
+	class TreeComparingTable : public vector<Level>
+	{
+	public:
+		Level & NthLevel(size_t n)
+		{
+			this->reserve(n + 1);
+			while (this->size() < n + 1)
+			{
+				this->push_back(unordered_map<string, Entity>());
+			}
 
-        ~Folder()
-        {
-        for(size_t i = 0; i < this->Contents.size(); ++i)
-        {
-            if(this->Contents[i])
-            {
-                delete this->Contents[i];
-            }
-        }
-        }
-
-        vector<Entity*> Contents;
-    };
-
-    class File : public Entity
-    {
-    public:
-        File()
-            :Entity(EntityType::File)
-        {}
-        File(const string & name)
-            :Entity(name, EntityType::File)
-        { }
-
-        string Hash;
-
-        string Date;
-
-        long long SizeInBytes; // in bytes;
-    };
-
-    class DirectoryTree
-    {
-    public:
-        Folder Root;
-    };
-
+			return this->at(n);
+		}
+	};
 }

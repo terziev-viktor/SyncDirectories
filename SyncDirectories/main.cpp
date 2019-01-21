@@ -1,29 +1,29 @@
 #include "CommandExecutor.h"
-#include "libs.h"
-
 using namespace cmds;
-using namespace CryptoPP;
 
 int main(int argc, char * argv[])
 {
 	CommandExecutor executor;
+
+	// Test 'vectors' ----
 	int test_argc = 5;
 	char * test_argv[5];
-	char a[25];
-	char b[25];
-	char c[25];
-	char d[25];
-	char e[25];
-	strcpy(a, "sync.exe");
-	strcpy(b, "analyze");
-	strcpy(c, "mirror");
-	strcpy(d, "/home/viktor/test_dir_1");
-	strcpy(e, "/home/viktor/test_dir_2");
+	char a[10];
+	char b[10];
+	char c[10];
+	char d[50];
+	char e[50];
+	strcpy_s(a, 10, "sync.exe");
+	strcpy_s(b, 10, "analyze");
+	strcpy_s(c, 10, "mirror");
+	strcpy_s(d, 50, "C:\\Users\\terzi\\Desktop\\Home");
+	strcpy_s(e, 50, "C:\\Users\\terzi\\Desktop\\Home2");
 	test_argv[0] = a;
 	test_argv[1] = b;
 	test_argv[2] = c;
 	test_argv[3] = d;
 	test_argv[4] = e;
+	// --------------------
 
 	try
 	{																																																																				

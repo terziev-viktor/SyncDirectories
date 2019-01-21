@@ -13,7 +13,7 @@ SET(GCC_COVERAGE_COMPILE_FLAGS "-std=c++17 -lstdc++fs")
 
 SET(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} ${GCC_COVERAGE_COMPILE_FLAGS}")
 
-target_link_libraries(main ${CMAKE_SOURCE_DIR}/libs/libcryptopp.a)
+target_link_libraries(main ${CMAKE_SOURCE_DIR}/libs/cryptopp/Win32/Output/Debug/cryptlib.lib)
 
 target_link_libraries(main stdc)
 target_link_libraries(main "Cmd")
