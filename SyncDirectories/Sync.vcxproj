@@ -118,6 +118,8 @@
     <ClCompile Include="Analyze.cpp" />
     <ClCompile Include="Command.cpp" />
     <ClCompile Include="CommandExecutor.cpp" />
+    <ClCompile Include="DirectoryTree.cpp" />
+    <ClCompile Include="GenerateHash.cpp" />
     <ClCompile Include="HashValue.cpp" />
     <ClCompile Include="Help.cpp" />
     <ClCompile Include="main.cpp" />
@@ -133,6 +135,8 @@
     <ClInclude Include="Help.h" />
     <ClInclude Include="libs.h" />
     <ClInclude Include="Perform.h" />
+    <ClInclude Include="SortedVector.h" />
+    <ClInclude Include="ToByteArray.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

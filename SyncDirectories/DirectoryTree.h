@@ -1,7 +1,7 @@
 #include "HashValue.h"
+#include "SortedVector.h"
 
 #include <string>
-#include <vector>
 #include <unordered_map>
 #include <experimental/filesystem>
 using namespace std::experimental::filesystem;
@@ -18,22 +18,60 @@ namespace dirtree
 		Folder, File
 	};
 
-	struct Entity
+	// Entity that represents a file OR a folder
+	// Not using hierarchy because dynamic casts are expensive
+	class Entity
 	{
+	private:
+		bool CompareByteByByte(const Entity & other) const;
+
+		uintmax_t fileSize;
+	public:
+		// Comparing only file hashes not byte-by-byte
+		static bool HashOnly;
+
+		// using block-hash comparrison for files
+		static bool Block;
 		// For convenience in the algorithm Im using
 		Entity()
 		{
 			this->Type = Folder;
 		}
+
+		void SetSize(uintmax_t fileSize);
+
+		// Last modified date
+		v1::file_time_type Date;
+
+		// Size of the file in bytes or the count of the directories in the folder
+		uintmax_t Size() const;
+
+		// Names of subfolders and files in the current directory
+		// Their location is one step deeper than this entity
 		vector<string> Subdirectories;
 
 		v1::path Path;
+		
+		// Unique id of the folder, 
+		// if 2 subtrees have the same label they are the isomorphic
+		HashValue Hash;
 
-		bool Check; // meta data
+		// Title of the file/folder == path.filename().string()
+		string Name;
 
+		bool Check; // meta data for the main algorithm
+
+		// Folder or File
 		EntityType Type;
 
-		vector<HashValue> Hash;
+		// Folders are compared by name and files by hash, date and size
+		bool operator==(const Entity & other) const;
+
+		// Comparing folders by name and files by content
+		bool operator<(const Entity & other) const;
+
+		// Comparing hashes for files and names for folders
+		bool CompareByLabel(const Entity & other) const;
 	};
 
 	// Level in the directory tree
@@ -45,15 +83,17 @@ namespace dirtree
 	class TreeComparingTable : public vector<Level>
 	{
 	public:
-		Level & NthLevel(size_t n)
-		{
-			this->reserve(n + 1);
-			while (this->size() < n + 1)
-			{
-				this->push_back(unordered_map<string, Entity>());
-			}
+		Level & NthLevel(size_t n);
 
-			return this->at(n);
-		}
+		// Labeling folders by generating hash on their contents
+		void LabelByHash();
+
+		void SortByHash(vector<string> & subdirs, size_t depth);
+
+		bool CompareSubdirsByHash(const string & a, const string & b, size_t depth);
+
+		void CheckIsomorphicSubtrees(TreeComparingTable & left, TreeComparingTable & right) const;
+
+		Entity & TreeRoot();
 	};
 }

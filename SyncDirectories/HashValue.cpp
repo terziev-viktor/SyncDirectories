@@ -16,16 +16,48 @@ HashValue::HashValue(uint32_t v[5])
 	}
 }
 
-bool HashValue::operator==(const HashValue & other)
+bool HashValue::operator<(const HashValue & other) const
 {
-	for (size_t i = 0; i < 5; ++i)
+	size_t i = 0;
+	while (this->GetValue()[i] == other.GetValue()[i])
+		++i;
+	if (i == HashValue::VALUESIZE)
 	{
-		if (this->v[i] != other.v[i])
+		return false;
+	}
+	return this->GetValue()[i] < other.GetValue()[i];
+}
+
+bool HashValue::operator<=(const HashValue & other) const
+{
+	return !(*this > other);
+}
+
+bool HashValue::operator>(const HashValue & other) const
+{
+	return !(*this == other) && !(*this < other);
+}
+
+bool HashValue::operator>=(const HashValue & other) const
+{
+	return !(*this < other);
+}
+
+bool HashValue::operator==(const HashValue & other) const
+{
+	for (size_t i = 0; i < HashValue::VALUESIZE; ++i)
+	{
+		if (this->GetValue()[i] != other.GetValue()[i])
 		{
 			return false;
 		}
 	}
 	return true;
+}
+
+bool HashValue::operator!=(const HashValue & other) const
+{
+	return !(*this == other);
 }
 
 std::ostream & operator<<(std::ostream & out, const HashValue & obj)

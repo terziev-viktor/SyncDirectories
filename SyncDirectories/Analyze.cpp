@@ -2,8 +2,8 @@
 #include "DirectoryTree.h"
 #include "GenerateHash.h"
 
-using dirtree::TreeComparingTable;
-using dirtree::Entity;
+#include <fstream>
+using namespace dirtree;
 using cmds::Analyze;
 using cmds::CommandResult;
 using cmds::Command;
@@ -33,7 +33,9 @@ void BuildTCT(TreeComparingTable & tct, char * path)
 		Entity e;
 		e.Check = false;
 		e.Path = i->path();
-		string name = e.Path.filename().string();
+		e.Name = e.Path.filename().string();
+
+		string name = e.Name;
 		string parent = e.Path.parent_path().filename().string();
 
 		if (is_regular_file(i->path()))
@@ -41,62 +43,69 @@ void BuildTCT(TreeComparingTable & tct, char * path)
 			e.Type = dirtree::EntityType::File;
 			uint32_t buffer[5];
 			GenerateHash(i->path().string(), buffer);
-			e.Hash.push_back(buffer);
-			tct.NthLevel(depth)[name] = e;
+			e.Hash = buffer; // the label of every file is its hash
+			e.SetSize(file_size(e.Path));
+			e.Date = last_write_time(e.Path);
+
+			tct.NthLevel(depth)[e.Path.string()] = e;
 
 			// Every file is resposible for informing his parent for its existance
-			tct.NthLevel(depth - 1)[parent].Subdirectories.push_back(name);
+			tct.NthLevel(depth - 1)[parent].Subdirectories.push_back(e.Path.string());
 		}
 		else
 		{
 			// Every folder is identified by its content and name.
 			// Because every file informs its parent for its existance 
 			// The folder will be built by the end of this loop
-			tct.NthLevel(depth)[name] = e;
-			tct.NthLevel(depth - 1)[parent].Subdirectories.push_back(name);
+			tct.NthLevel(depth)[e.Path.string()] = e;
+			tct.NthLevel(depth - 1)[parent].Subdirectories.push_back(e.Path.string());
 		}
 	}
 }
 
+// Right directory must become an exact copy of left directory
 CommandResult Analyze::Mirror(char * argv[]) const
 {
 	TreeComparingTable tctLeft;
 	TreeComparingTable tctRight;
-	BuildTCT(tctLeft, argv[0]);
-	BuildTCT(tctRight, argv[1]);
-	
-	
-	{ // Everything is working and for now just printing the results ----
+	size_t off = 0;
+	string syncTXT;
 
-		std::cout << "Table for " << argv[0] << std::endl;
-		for (size_t i = 0; i < tctLeft.size(); ++i)
+	if (argv[0][0] == '-') // a command
+	{
+		for (size_t i = 0; i < 2; ++i)
 		{
-			std::cout << i << " ";
-			for (auto & j : tctLeft[i])
+			++off;
+			if (strcmp(argv[i], "-hash-only") == 0)
 			{
-				std::cout << "(name:" << j.first << " subdirs:";
-				for (int k = 0; k < j.second.Subdirectories.size(); ++k)
+				Entity::HashOnly = true;
+
+			}
+			else if (strcmp(argv[i], "-block") == 0)
+			{
+				Entity::Block = true;
+			}
+			else
+			{
+				return CommandResult() =
 				{
-					std::cout << j.second.Subdirectories[k] << ',';
-				}
-				std::cout << "), ";
+					false,
+					"Invalid option for command analyze"
+				};
 			}
-			std::cout << std::endl;
 		}
+	}
 
-		std::cout << std::endl << "Table for " << argv[1] << std::endl;
-		for (size_t i = 0; i < tctRight.size(); ++i)
-		{
-			std::cout << i << " ";
-			for (auto & j : tctRight[i])
-			{
-				std::cout << j.first << ' ';
-			}
-			std::cout << std::endl;
-		}
-	} // -----------------------------------------------------------------
+	BuildTCT(tctLeft, argv[0 + off]);
+	BuildTCT(tctRight, argv[1 + off]);
 
-	return CommandResult() = 
+	tctLeft.LabelByHash();
+	tctRight.LabelByHash();
+
+	// Handling the different subdirectories
+	this->HandleMissingDirectories(tctLeft, tctRight);
+
+	return CommandResult() =
 	{
 		false,
 		"Implementing this function at the moment"
@@ -129,17 +138,17 @@ CommandResult Analyze::Execute(int argc, char * argv[]) const
 		std::cout << argv[i] << std::endl;
 	}
 
-	if(strcmp(argv[0], "mirror") == 0)
+	if (strcmp(argv[0], "mirror") == 0)
 	{
 		return this->Mirror(argv + 1);
 	}
 
-	if(strcmp(argv[0], "safe") == 0)
+	if (strcmp(argv[0], "safe") == 0)
 	{
 		return this->Safe(argv + 1);
 	}
-	
-	if(strcmp(argv[0], "standard") == 0)
+
+	if (strcmp(argv[0], "standard") == 0)
 	{
 		return this->Standard(argv + 1);
 	}

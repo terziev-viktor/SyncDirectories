@@ -1,10 +1,12 @@
 #include "CommandExecutor.h"
+#include "SortedVector.h"
+#include <ctime>
 using namespace cmds;
 
 int main(int argc, char * argv[])
 {
 	CommandExecutor executor;
-
+	
 	// Test 'vectors' ----
 	int test_argc = 5;
 	char * test_argv[5];
