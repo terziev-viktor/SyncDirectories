@@ -6,6 +6,29 @@ using namespace std;
 template<class T>
 class SortedVector : private vector<T>
 {
+private:
+	int InnerFind(int l, int r, const T & item) const
+	{
+		if (r >= l)
+		{
+			int mid = l + (r - l) / 2;
+
+			if (this->at(mid) == item)
+			{
+				return mid;
+			}
+
+			if (this->at(mid) > item)
+			{
+				return InnerFind(l, mid - 1, item);
+			}
+
+			return InnerFind(mid + 1, r, item);
+		}
+
+		return -1;
+	}
+
 public:
 	void SwapElementsAt(size_t a, size_t b)
 	{
@@ -59,6 +82,11 @@ public:
 				this->SwapElementsAt(this->size() - j - 1, this->size() - j - 2);
 			}
 		}
+	}
+
+	int Find(const T & item) const
+	{
+		return InnerFind(0, this->size() - 1, item);
 	}
 
 	const size_t Size() const { return this->size(); }

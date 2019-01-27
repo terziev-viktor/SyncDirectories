@@ -1,10 +1,55 @@
 #include "DirectoryTree.h"
 #include "GenerateHash.h"
 #include <iostream>
+#include <fstream>
 
 bool dirtree::Entity::CompareByteByByte(const Entity & other) const
 {
-	return false;
+	std::ifstream in1(this->FullPath.string(), std::ios::binary);
+	std::ifstream in2(other.FullPath.string(), std::ios::binary);
+	if (!in1 || !in2)
+	{
+		in1.close();
+		in2.close();
+		throw std::exception("Could not open directory");
+	}
+	size_t blockSize = 64 * 1024 * 1024;
+	if (this->Size() < blockSize)
+	{
+		blockSize = this->Size();
+	}
+
+	unique_ptr<char> thisBuffer(new char[blockSize]);
+	unique_ptr<char> otherBuffer(new char[blockSize]);
+
+	for (size_t i = 0; i < blockSize; ++i)
+	{
+		thisBuffer.get()[i] = 0;
+		otherBuffer.get()[i] = 0;
+	}
+	while (in1 && in2)
+	{
+		in1.read(thisBuffer.get(), blockSize);
+		in2.read(otherBuffer.get(), blockSize);
+		for (size_t i = 0; i < blockSize; ++i)
+		{
+			if (thisBuffer.get()[i] != otherBuffer.get()[i])
+			{
+				in1.close();
+				in2.close();
+				return false;
+			}
+		}
+		if (in1.eof() || in2.eof())
+		{
+			break;
+		}
+	}
+
+	in1.close();
+	in2.close();
+
+	return true;
 }
 
 void dirtree::Entity::SetSize(uintmax_t fileSize)
@@ -34,17 +79,16 @@ bool dirtree::Entity::operator==(const Entity & other) const
 	{
 		if (Entity::HashOnly)
 		{
-			return this->Hash == other.Hash && this->Date == other.Date && this->Size() == other.Size();
+			return this->Hash == other.Hash;
 		}
 		else
 		{
-			return this->Date == other.Date && this->Size() == other.Size() &&
-				this->CompareByteByByte(other);
+			return this->CompareByteByByte(other);
 		}
 	}
 	else
 	{
-		return this->Name == other.Name;
+		return this->RelativePath == other.RelativePath;
 	}
 }
 
@@ -177,31 +221,80 @@ bool dirtree::TreeComparingTable::CompareSubdirsByHash(const string & a, const s
 	return entity_a.Hash < entity_b.Hash;
 }
 
-void dirtree::TreeComparingTable::CheckIsomorphicSubtrees(TreeComparingTable & left, TreeComparingTable & right) const
+void dirtree::TreeComparingTable::CheckIsomorphisSubtrees(TreeComparingTable & other)
 {
-	size_t n = min(left.size(), right.size());
-	
-	for (int i = n - 1; i >= 0; i--)
+	for (size_t i = 0; i < this->size(); ++i)
 	{
-		Level & lvlLeft = left.NthLevel(i);
-		Level & lvlRight = right.NthLevel(i);
-
-		for (auto& j : lvlLeft)
+		Level & thisLvl = this->NthLevel(i);
+		Level & otherLvl = other.NthLevel(i);
+		
+		for (auto& j : thisLvl)
 		{
-			Entity & eLeft = j.second;
-			for (auto& k : lvlRight)
+			Entity & thisEntity = j.second;
+			const string & thisEntityName = j.first;
+			auto iter = otherLvl.find(thisEntityName);
+
+			// found by name
+			if (iter != otherLvl.end() && iter->second.Hash == thisEntity.Hash)
 			{
-				Entity & eRight = k.second;
-				if (eLeft == eRight)
+				iter->second.Check = true;
+				thisEntity.Check = true;
+			}
+			else // not found by name or hashes don't match
+			{
+				for (auto& k : otherLvl)
 				{
-					eRight.Check = true;
-					eLeft.Check = true;
-					continue;
+					if (thisEntity.Hash == k.second.Hash)
+					{
+						thisEntity.Check = true;
+						k.second.Check = true;
+						v1::path relativeParentPath = thisEntity.RelativePath.parent_path();
+						if (relativeParentPath != k.second.RelativePath.parent_path())
+						{
+							k.second.ShouldBeMovedTo = relativeParentPath;
+						}
+						if (thisEntity.Name != k.second.Name)
+						{
+							k.second.ShouldBeRenamedTo = thisEntity.Name;
+						}
+						break;
+					}
 				}
 			}
 		}
 	}
+}
 
+dirtree::Entity * dirtree::TreeComparingTable::FindFile(const Entity & file)
+{
+	EntityInfo info = 
+	{
+		file.Hash,
+		0,
+		""
+	};
+	int ind = this->files.Find(info);
+	if (ind == -1)
+	{
+		return nullptr;
+	}
+	// Go to the left most collision
+	int n = ind;
+	while (ind > 0 && this->files[ind - 1].Hash == this->files[ind].Hash) { --ind; }
+	for (size_t i = 0; i <= n; ++i)
+	{
+		Entity & e = (*this)[this->files[ind]];
+		if (e == file)
+		{
+			return &e;
+		}
+	}
+	return nullptr;
+}
+
+dirtree::Entity & dirtree::TreeComparingTable::operator[](const EntityInfo & info)
+{
+	return this->NthLevel(info.depth)[info.name];
 }
 
 dirtree::Entity & dirtree::TreeComparingTable::TreeRoot()

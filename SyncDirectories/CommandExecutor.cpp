@@ -35,5 +35,9 @@ CommandResult cmds::CommandExecutor::Execute(const std::string & command, int ar
 			return commands[i]->Execute(argc, argv);
 		}
 	}
-	throw "Not a command";
+	return CommandResult() =
+	{
+		false,
+		"This is not a command. type sync.exe help for more details on the usage of the program"
+	};
 }

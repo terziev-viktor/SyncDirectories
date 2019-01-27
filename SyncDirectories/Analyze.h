@@ -5,11 +5,11 @@ namespace cmds
 {
 	class Analyze : public Command
 	{
-		CommandResult Mirror(char * argv[]) const;
+		CommandResult Mirror(int, char * argv[]) const;
 
-		CommandResult Safe(char * argv[]) const;
+		CommandResult Safe(int, char * argv[]) const;
 
-		CommandResult Standard(char * argv[]) const;
+		CommandResult Standard(int, char * argv[]) const;
 
 	public:
 		Analyze();
