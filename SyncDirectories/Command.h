@@ -7,6 +7,7 @@ namespace cmds
 	struct CommandResult
 	{
 		bool Successful;
+
 		std::string Message;
 	};
 

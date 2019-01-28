@@ -17,6 +17,42 @@ namespace dirtree
 	{
 		Folder, File
 	};
+	class EntityInfo
+	{
+	public:
+		HashValue Hash;
+
+		// Coordinates in the table ---
+		int depth;
+
+		string RelativePath;
+		//-----------------------------
+
+		bool operator==(const EntityInfo & other) const
+		{
+			return this->Hash == other.Hash;
+		}
+
+		bool operator<(const EntityInfo & other) const
+		{
+			return this->Hash < other.Hash;
+		}
+
+		bool operator<=(const EntityInfo & other) const
+		{
+			return this->Hash <= other.Hash;
+		}
+
+		bool operator>(const EntityInfo & other) const
+		{
+			return this->Hash > other.Hash;
+		}
+
+		bool operator>=(const EntityInfo & other) const
+		{
+			return this->Hash >= other.Hash;
+		}
+	};
 
 	// Entity that represents a file OR a folder
 	// Not using hierarchy because dynamic casts are expensive
@@ -48,7 +84,7 @@ namespace dirtree
 
 		// The entity has the same relative path but not the same content
 		// so it should copy its content
-		v1::path ShouldCopyFrom;
+		EntityInfo ShouldCopyFrom;
 
 		bool ShouldBeDeleted;
 
@@ -90,41 +126,6 @@ namespace dirtree
 		bool CompareByLabel(const Entity & other) const;
 	};
 
-	class EntityInfo
-	{
-	public:
-		HashValue Hash;
-
-		int depth;
-
-		string name;
-
-		bool operator==(const EntityInfo & other) const
-		{
-			return this->Hash == other.Hash;
-		}
-
-		bool operator<(const EntityInfo & other) const
-		{
-			return this->Hash < other.Hash;
-		}
-
-		bool operator<=(const EntityInfo & other) const
-		{
-			return this->Hash <= other.Hash;
-		}
-
-		bool operator>(const EntityInfo & other) const
-		{
-			return this->Hash > other.Hash;
-		}
-
-		bool operator>=(const EntityInfo & other) const
-		{
-			return this->Hash >= other.Hash;
-		}
-	};
-
 	// Level in the directory tree
 	// Mapping the name of the file/directory to an Entity object
 	typedef unordered_map<string, Entity> Level;
@@ -151,6 +152,8 @@ namespace dirtree
 		// Checks subtrees on the same level and with the same hash
 		// If names or relative paths dont match <other>'s ShouldBeRenamedTo and ShouldBeMovedTo are changed
 		void CheckIsomorphisSubtrees(TreeComparingTable & other);
+
+		v1::path RelativeRootPath;
 
 		SortedVector<EntityInfo> & Files() { return files; }
 

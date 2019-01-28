@@ -294,7 +294,7 @@ dirtree::Entity * dirtree::TreeComparingTable::FindFile(const Entity & file)
 
 dirtree::Entity & dirtree::TreeComparingTable::operator[](const EntityInfo & info)
 {
-	return this->NthLevel(info.depth)[info.name];
+	return this->NthLevel(info.depth)[info.RelativePath];
 }
 
 dirtree::Entity & dirtree::TreeComparingTable::TreeRoot()

@@ -38,6 +38,6 @@ CommandResult cmds::CommandExecutor::Execute(const std::string & command, int ar
 	return CommandResult() =
 	{
 		false,
-		"This is not a command. type sync.exe help for more details on the usage of the program"
+		"This is not a command. Type sync.exe help for more details on the usage of the program."
 	};
 }
