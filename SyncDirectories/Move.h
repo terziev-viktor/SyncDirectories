@@ -1,13 +1,11 @@
 #pragma once
 #include "Command.h"
-
 namespace cmds
 {
-	class Perform : public Command
+	class Move : public Command
 	{
 	public:
-		Perform();
-		~Perform();
+		Move();
 
 		// Inherited via Command
 		virtual CommandResult Execute(int argc, const char * argv[]) override;
@@ -15,4 +13,3 @@ namespace cmds
 		static Command * Create();
 	};
 }
-

@@ -1,13 +1,14 @@
 #pragma once
-#include "Command.h"
-
+#include "Move.h"
 namespace cmds
 {
-	class Perform : public Command
+
+	class Rename : public Command
 	{
+	private:
+		Move mv;
 	public:
-		Perform();
-		~Perform();
+		Rename();
 
 		// Inherited via Command
 		virtual CommandResult Execute(int argc, const char * argv[]) override;
@@ -15,4 +16,3 @@ namespace cmds
 		static Command * Create();
 	};
 }
-

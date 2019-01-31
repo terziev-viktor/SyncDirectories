@@ -28,6 +28,8 @@ namespace dirtree
 		string RelativePath;
 		//-----------------------------
 
+		string FullPath;
+
 		bool operator==(const EntityInfo & other) const
 		{
 			return this->Hash == other.Hash;
@@ -61,8 +63,12 @@ namespace dirtree
 	private:
 		bool CompareByteByByte(const Entity & other) const;
 
+		// hashes of blocks of 64MB each representing the whole file
+		vector<HashValue> fileAsHashes;
+
 		uintmax_t fileSize;
 	public:
+		static const size_t BlockSize = 1024; // 64 MB
 		// Comparing only file hashes not byte-by-byte
 		static bool HashOnly;
 
@@ -82,8 +88,7 @@ namespace dirtree
 
 		string ShouldBeRenamedTo;
 
-		// The entity has the same relative path but not the same content
-		// so it should copy its content
+		// Full path of the entity to copy from
 		EntityInfo ShouldCopyFrom;
 
 		bool ShouldBeDeleted;
@@ -107,6 +112,9 @@ namespace dirtree
 		// Unique id of the folder, 
 		// if 2 subtrees have the same label they are the isomorphic
 		HashValue Hash;
+
+		vector<HashValue> & GetBlockHashes();
+		const vector<HashValue> & GetBlockHashes() const;
 
 		// Title of the file/folder == path.filename().string()
 		string Name;
@@ -162,5 +170,7 @@ namespace dirtree
 		Entity & operator[](const EntityInfo & info);
 
 		Entity & TreeRoot();
+
+		void SaveHashes(const std::string path_to_bin_file);
 	};
 }

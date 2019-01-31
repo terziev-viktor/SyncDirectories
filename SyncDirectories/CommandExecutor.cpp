@@ -1,16 +1,11 @@
 #include "CommandExecutor.h"
-#include "Analyze.h"
-#include "Help.h"
-#include "Perform.h"
 
 using cmds::CommandExecutor;
 using cmds::CommandResult;
 
 CommandExecutor::CommandExecutor()
 {
-	this->RegisterCommand(Analyze::Create());
-	this->RegisterCommand(Help::Create());
-	this->RegisterCommand(Perform::Create());
+
 }
 
 CommandExecutor::~CommandExecutor()
@@ -21,12 +16,12 @@ CommandExecutor::~CommandExecutor()
 	}
 }
 
-void cmds::CommandExecutor::RegisterCommand(const Command * c)
+void cmds::CommandExecutor::RegisterCommand(Command * c)
 {
 	this->commands.push_back(c);
 }
 
-CommandResult cmds::CommandExecutor::Execute(const std::string & command, int argc, char * argv[]) const
+CommandResult cmds::CommandExecutor::Execute(const std::string & command, int argc, const char * argv[])
 {
 	for (size_t i = 0; i < this->commands.size(); ++i)
 	{

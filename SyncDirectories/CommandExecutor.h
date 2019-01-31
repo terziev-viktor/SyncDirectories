@@ -9,14 +9,14 @@ namespace cmds
 	class CommandExecutor
 	{
 	private:
-		vector<const Command*> commands;
+		vector<Command*> commands;
 	public:
 		CommandExecutor();
 
 		~CommandExecutor();
 
-		void RegisterCommand(const Command *);
+		void RegisterCommand(Command *);
 
-		CommandResult Execute(const std::string & command, int argc, char * argv[]) const;
+		CommandResult Execute(const std::string & command, int argc, const char * argv[]);
 	};
 }

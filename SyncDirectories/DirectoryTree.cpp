@@ -13,25 +13,20 @@ bool dirtree::Entity::CompareByteByByte(const Entity & other) const
 		in2.close();
 		throw std::exception("Could not open directory");
 	}
-	size_t blockSize = 64 * 1024 * 1024;
-	if (this->Size() < blockSize)
-	{
-		blockSize = this->Size();
-	}
 
-	unique_ptr<char> thisBuffer(new char[blockSize]);
-	unique_ptr<char> otherBuffer(new char[blockSize]);
+	unique_ptr<char> thisBuffer(new char[Entity::BlockSize]);
+	unique_ptr<char> otherBuffer(new char[Entity::BlockSize]);
 
-	for (size_t i = 0; i < blockSize; ++i)
+	for (size_t i = 0; i < Entity::BlockSize; ++i)
 	{
 		thisBuffer.get()[i] = 0;
 		otherBuffer.get()[i] = 0;
 	}
 	while (in1 && in2)
 	{
-		in1.read(thisBuffer.get(), blockSize);
-		in2.read(otherBuffer.get(), blockSize);
-		for (size_t i = 0; i < blockSize; ++i)
+		in1.read(thisBuffer.get(), Entity::BlockSize);
+		in2.read(otherBuffer.get(), Entity::BlockSize);
+		for (size_t i = 0; i < Entity::BlockSize; ++i)
 		{
 			if (thisBuffer.get()[i] != otherBuffer.get()[i])
 			{
@@ -67,6 +62,16 @@ uintmax_t dirtree::Entity::Size() const
 	{
 		return this->Subdirectories.size();
 	}
+}
+
+vector<HashValue>& dirtree::Entity::GetBlockHashes()
+{
+	return this->fileAsHashes;
+}
+
+const vector<HashValue>& dirtree::Entity::GetBlockHashes() const
+{
+	return this->fileAsHashes;
 }
 
 bool dirtree::Entity::operator==(const Entity & other) const
@@ -171,7 +176,7 @@ void dirtree::TreeComparingTable::LabelByHash()
 
 			{
 				unsigned long long currentDataSize = labels.size() * sizeof(HashValue);
-				unique_ptr<unsigned char> data(new unsigned char[currentDataSize]);
+				unique_ptr<char> data(new char[currentDataSize]);
 				try
 				{
 					memcpy(data.get(), labels.data(), currentDataSize);
@@ -300,6 +305,29 @@ dirtree::Entity & dirtree::TreeComparingTable::operator[](const EntityInfo & inf
 dirtree::Entity & dirtree::TreeComparingTable::TreeRoot()
 {
 	return this->at(0).begin()->second;
+}
+
+void dirtree::TreeComparingTable::SaveHashes(const std::string path_to_bin_file)
+{
+	std::ofstream out;
+	out.open(path_to_bin_file, std::ios::binary | std::ios::app);
+	if (!out)
+	{
+		throw exception("Could not open binary file");
+	}
+	for (size_t i = 0; i < this->files.Size(); ++i)
+	{
+		Entity & file = (*this)[this->files[i]];
+		size_t s = file.GetBlockHashes().size();
+		out.write(reinterpret_cast<char*>(file.FullPath.string().size()), sizeof(size_t));
+		out.write(file.FullPath.string().c_str(), sizeof(file.FullPath.string().size()));
+		out.write(reinterpret_cast<char*>(s), sizeof(s));
+		for (size_t i = 0; i < s; ++i)
+		{
+			out.write(reinterpret_cast<char*>(&file.GetBlockHashes()[i]), sizeof(HashValue));
+		}
+	}
+	out.close();
 }
 
 bool dirtree::Entity::Block = false;

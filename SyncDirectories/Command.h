@@ -22,7 +22,7 @@ namespace cmds
 		}
 		virtual ~Command() {}
 		
-		virtual CommandResult Execute(int argc, char * argv[]) const = 0;
+		virtual CommandResult Execute(int argc, const char * argv[]) = 0;
 
 		const std::string & GetTrigger() const
 		{

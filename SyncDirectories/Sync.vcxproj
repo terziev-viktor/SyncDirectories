@@ -118,24 +118,36 @@
     <ClCompile Include="Analyze.cpp" />
     <ClCompile Include="Command.cpp" />
     <ClCompile Include="CommandExecutor.cpp" />
+    <ClCompile Include="Copy.cpp" />
+    <ClCompile Include="Create.cpp" />
     <ClCompile Include="DirectoryTree.cpp" />
     <ClCompile Include="GenerateHash.cpp" />
     <ClCompile Include="HashValue.cpp" />
     <ClCompile Include="Help.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="Move.cpp" />
     <ClCompile Include="Perform.cpp" />
+    <ClCompile Include="PerformCommandExecutor.cpp" />
+    <ClCompile Include="Rename.cpp" />
+    <ClCompile Include="SyncCommandExecutor.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Analyze.h" />
     <ClInclude Include="Command.h" />
     <ClInclude Include="CommandExecutor.h" />
+    <ClInclude Include="Copy.h" />
+    <ClInclude Include="Create.h" />
     <ClInclude Include="DirectoryTree.h" />
     <ClInclude Include="GenerateHash.h" />
     <ClInclude Include="HashValue.h" />
     <ClInclude Include="Help.h" />
     <ClInclude Include="libs.h" />
+    <ClInclude Include="Move.h" />
     <ClInclude Include="Perform.h" />
+    <ClInclude Include="PerformCommandExecutor.h" />
+    <ClInclude Include="Rename.h" />
     <ClInclude Include="SortedVector.h" />
+    <ClInclude Include="SyncCommandExecutor.h" />
     <ClInclude Include="ToByteArray.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

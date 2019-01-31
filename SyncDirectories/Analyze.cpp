@@ -18,7 +18,7 @@ Analyze::~Analyze()
 }
 
 // Recursively iterate a directory and create a tree comparing table
-void BuildTCT(TreeComparingTable & tct, char * p)
+void BuildTCT(TreeComparingTable & tct, const char * p)
 {
 	tct.RelativeRootPath = p;
 	recursive_directory_iterator end = recursive_directory_iterator();
@@ -50,9 +50,15 @@ void BuildTCT(TreeComparingTable & tct, char * p)
 		{
 			e.Type = dirtree::EntityType::File;
 			e.SetSize(file_size(e.FullPath));
+
 			uint32_t buffer[5];
-			GenerateHashForFile(e.FullPath.string(), e.Size(), buffer);
+			GenerateHashForFile(e.FullPath.string(), buffer);
 			e.Hash = buffer; // the label of every file is its hash
+			if (Entity::Block)
+			{
+				GenerateHashForFile(e.FullPath.string(), e.GetBlockHashes());
+			}
+			
 			e.Date = last_write_time(e.FullPath);
 			tct.Files().PushBack(EntityInfo() =
 				{
@@ -74,6 +80,21 @@ void BuildTCT(TreeComparingTable & tct, char * p)
 			tct.NthLevel(depth)[relativePathStr] = e;
 			tct.NthLevel(depth - 1)[e.RelativePath.parent_path().string()].Subdirectories.push_back(relativePathStr);
 		}
+	}
+}
+
+void BuildTCTs(TreeComparingTable & tctLeft, TreeComparingTable & tctRight, const char * argv[], size_t off)
+{
+	BuildTCT(tctLeft, argv[0 + off]);
+	BuildTCT(tctRight, argv[1 + off]);
+
+	// Labeling folders with hash of their contents
+	tctLeft.LabelByHash();
+	tctRight.LabelByHash();
+
+	if (Entity::HashOnly)
+	{
+		tctLeft.CheckIsomorphisSubtrees(tctRight);
 	}
 }
 
@@ -123,7 +144,7 @@ void _Mirror(TreeComparingTable & tctLeft, TreeComparingTable & tctRight, vector
 						rightEntity.ShouldCopyFrom.RelativePath = leftEntityIter->second.RelativePath.string();
 						rightEntity.ShouldCopyFrom.depth = i;
 						rightEntity.ShouldCopyFrom.Hash = leftEntityIter->second.Hash;
-						
+						rightEntity.ShouldCopyFrom.FullPath = leftEntityIter->second.FullPath.string();
 					}
 				}
 				else
@@ -180,7 +201,7 @@ void _Mirror(TreeComparingTable & tctLeft, TreeComparingTable & tctRight, vector
 }
 
 // Right directory must become an exact copy of left directory
-CommandResult Analyze::Mirror(int argc, char * argv[]) const
+CommandResult Analyze::Mirror(int argc, const char * argv[]) const
 {
 	TreeComparingTable tctLeft;
 	TreeComparingTable tctRight;
@@ -190,12 +211,7 @@ CommandResult Analyze::Mirror(int argc, char * argv[]) const
 	{
 		return r;
 	}
-	BuildTCT(tctLeft, argv[0 + off]);
-	BuildTCT(tctRight, argv[1 + off]);
-
-	// Labeling folders with hash of their contents
-	tctLeft.LabelByHash();
-	tctRight.LabelByHash();
+	BuildTCTs(tctLeft, tctRight, argv, off);
 
 	if (Entity::HashOnly && tctLeft.TreeRoot().Hash == tctRight.TreeRoot().Hash)
 	{
@@ -206,15 +222,10 @@ CommandResult Analyze::Mirror(int argc, char * argv[]) const
 		};
 	}
 
-	if (Entity::HashOnly)
-	{
-		tctLeft.CheckIsomorphisSubtrees(tctRight);
-	}
-
 	// Handling the different subdirectories
 	vector<Entity> ShouldBeCreated;
 	_Mirror(tctLeft, tctRight, ShouldBeCreated);
-
+	cout << (Entity::HashOnly ? "hash-only" : "not-hash-only") << (Entity::Block ? "block" : "not-block") << endl;
 	for (size_t i = 0; i < ShouldBeCreated.size(); ++i)
 	{
 		std::cout << "CREATE " << ShouldBeCreated[i].FullPath << std::endl;
@@ -225,17 +236,25 @@ CommandResult Analyze::Mirror(int argc, char * argv[]) const
 		for (auto& j : lvl)
 		{
 			Entity & e = j.second;
+			if (!e.ShouldCopyFrom.RelativePath.empty())
+			{
+				cout << "COPY " << e.FullPath << " FROM " << tctLeft.RelativeRootPath << '\\' << e.ShouldCopyFrom.RelativePath << endl;
+			}
 			if (!e.ShouldBeMovedTo.empty())
 			{
 				cout << "MOVE " << e.FullPath << " TO " << tctRight.RelativeRootPath << '\\' << e.ShouldBeMovedTo << endl;
 			}
 			if (!e.ShouldBeRenamedTo.empty())
 			{
-				cout << "RENAME " << e.FullPath << " TO " << e.ShouldBeRenamedTo << endl;
-			}
-			if (!e.ShouldCopyFrom.RelativePath.empty())
-			{
-				cout << "COPY TO " << e.FullPath << " FROM " << tctLeft.RelativeRootPath << '\\' << e.ShouldCopyFrom.RelativePath << endl;
+				if (!e.ShouldBeMovedTo.empty())
+				{
+					cout << "RENAME " << tctRight.RelativeRootPath << '\\' << e.ShouldBeMovedTo << " TO " << e.ShouldBeRenamedTo
+						<< " # Moved by the previus command" << endl;
+				}
+				else
+				{
+					cout << "RENAME " << e.FullPath << " TO " << e.ShouldBeRenamedTo << endl;
+				}
 			}
 			if (e.ShouldBeDeleted)
 			{
@@ -244,6 +263,11 @@ CommandResult Analyze::Mirror(int argc, char * argv[]) const
 		}
 	}
 
+	if (Entity::Block)
+	{
+		tctLeft.SaveHashes("sync.bin");
+		tctRight.SaveHashes("sync.bin");
+	}
 	return CommandResult() =
 	{
 		true,
@@ -251,7 +275,7 @@ CommandResult Analyze::Mirror(int argc, char * argv[]) const
 	};
 }
 
-CommandResult Analyze::Safe(int argc, char * argv[]) const
+CommandResult Analyze::Safe(int argc, const char * argv[]) const
 {
 	TreeComparingTable tctLeft;
 	TreeComparingTable tctRight;
@@ -261,13 +285,7 @@ CommandResult Analyze::Safe(int argc, char * argv[]) const
 	{
 		return r;
 	}
-
-	BuildTCT(tctLeft, argv[0 + off]);
-	BuildTCT(tctRight, argv[1 + off]);
-
-	// Labeling folders with hash of their contents
-	tctLeft.LabelByHash();
-	tctRight.LabelByHash();
+	BuildTCTs(tctLeft, tctRight, argv, off);
 
 	if (Entity::HashOnly && tctLeft.TreeRoot().Hash == tctRight.TreeRoot().Hash)
 	{
@@ -276,11 +294,6 @@ CommandResult Analyze::Safe(int argc, char * argv[]) const
 			true,
 			"The Directories are already synchronized"
 		};
-	}
-
-	if (Entity::HashOnly)
-	{
-		tctLeft.CheckIsomorphisSubtrees(tctRight);
 	}
 
 	// Handling the different subdirectories
@@ -288,6 +301,7 @@ CommandResult Analyze::Safe(int argc, char * argv[]) const
 	// The same as in Mirror but deletions are now creations of directories (or copying files)
 	_Mirror(tctLeft, tctRight, ShouldBeCreated);
 
+	cout << (Entity::HashOnly ? "hash-only" : "not-hash-only") << (Entity::Block ? "block" : "not-block") << endl;
 	for (size_t i = 0; i < ShouldBeCreated.size(); ++i)
 	{
 		std::cout << "CREATE " << ShouldBeCreated[i].FullPath << std::endl;
@@ -299,29 +313,37 @@ CommandResult Analyze::Safe(int argc, char * argv[]) const
 		for (auto& j : lvl)
 		{
 			Entity & e = j.second;
+			if (!e.ShouldCopyFrom.RelativePath.empty())
+			{
+				cout << "COPY " << e.FullPath << " FROM " << tctLeft.RelativeRootPath << '\\' << e.ShouldCopyFrom.RelativePath << endl;
+			}
 			if (!e.ShouldBeMovedTo.empty())
 			{
-				cout << "MOVE " << e.FullPath << " TO " << e.ShouldBeMovedTo << endl;
+				cout << "MOVE " << e.FullPath << " TO " << tctRight.RelativeRootPath << '\\' << e.ShouldBeMovedTo << endl;
 			}
 			if (!e.ShouldBeRenamedTo.empty())
 			{
-				cout << "RENAME " << e.FullPath << " TO " << e.ShouldBeRenamedTo << endl;
-			}
-			if (!e.ShouldCopyFrom.RelativePath.empty())
-			{
-				cout << "COPY TO " << e.FullPath << " FROM " << tctLeft.RelativeRootPath << '\\' << e.ShouldCopyFrom.RelativePath << endl;
+				if (!e.ShouldBeMovedTo.empty())
+				{
+					cout << "RENAME " << tctRight.RelativeRootPath << '\\' << e.ShouldBeMovedTo << " TO " << e.ShouldBeRenamedTo
+						<< " # Moved by the previous command" << endl;
+				}
+				else
+				{
+					cout << "RENAME " << e.FullPath << " TO " << e.ShouldBeRenamedTo << endl;
+				}
 			}
 			if (e.ShouldBeDeleted)
 			{
 				if (e.Type == File)
 				{
-					cout << "COPY TO " << tctLeft.RelativeRootPath << '\\' << e.RelativePath << " FROM " << e.FullPath << endl;
+					cout << "COPY " << tctLeft.RelativeRootPath << '\\' << e.RelativePath << " FROM " << e.FullPath << endl;
 				}
 				else
 				{
 					cout << "CREATE " << tctLeft.RelativeRootPath << '\\' << e.RelativePath << endl;
 				}
-				
+
 			}
 		}
 	}
@@ -333,7 +355,7 @@ CommandResult Analyze::Safe(int argc, char * argv[]) const
 	};
 }
 
-CommandResult Analyze::Standard(int argc, char * argv[]) const
+CommandResult Analyze::Standard(int argc, const char * argv[]) const
 {
 	TreeComparingTable tctLeft;
 	TreeComparingTable tctRight;
@@ -343,13 +365,7 @@ CommandResult Analyze::Standard(int argc, char * argv[]) const
 	{
 		return r;
 	}
-
-	BuildTCT(tctLeft, argv[0 + off]);
-	BuildTCT(tctRight, argv[1 + off]);
-
-	// Labeling folders with hash of their contents
-	tctLeft.LabelByHash();
-	tctRight.LabelByHash();
+	BuildTCTs(tctLeft, tctRight, argv, off);
 
 	if (Entity::HashOnly && tctLeft.TreeRoot().Hash == tctRight.TreeRoot().Hash)
 	{
@@ -360,16 +376,12 @@ CommandResult Analyze::Standard(int argc, char * argv[]) const
 		};
 	}
 
-	if (Entity::HashOnly)
-	{
-		tctLeft.CheckIsomorphisSubtrees(tctRight);
-	}
-
 	// Handling the different subdirectories
 	vector<Entity> ShouldBeCreated;
 	// The same as in Mirror but deletions are now creations of directories (or copying files with newer date)
 	_Mirror(tctLeft, tctRight, ShouldBeCreated);
 
+	cout << (Entity::HashOnly ? "hash-only" : "not-hash-only") << (Entity::Block ? "block" : "not-block") << endl;
 	for (size_t i = 0; i < ShouldBeCreated.size(); ++i)
 	{
 		std::cout << "CREATE " << ShouldBeCreated[i].FullPath << std::endl;
@@ -381,32 +393,40 @@ CommandResult Analyze::Standard(int argc, char * argv[]) const
 		for (auto& j : lvl)
 		{
 			Entity & e = j.second;
-			if (!e.ShouldBeMovedTo.empty())
-			{
-				cout << "MOVE " << e.FullPath << " TO " << e.ShouldBeMovedTo << endl;
-			}
-			if (!e.ShouldBeRenamedTo.empty())
-			{
-				cout << "RENAME " << e.FullPath << " TO " << e.ShouldBeRenamedTo << endl;
-			}
 			if (!e.ShouldCopyFrom.RelativePath.empty())
 			{
 				// Saving the newer copy
 				Entity & otherE = tctLeft[e.ShouldCopyFrom];
 				if (otherE.Date < e.Date)
 				{
-					cout << "COPY TO " << otherE.FullPath << " FROM " << e.FullPath << endl;
+					cout << "COPY " << otherE.FullPath << " FROM " << e.FullPath << " # saving the newer copy" << endl;
 				}
 				else
 				{
-					cout << "COPY TO " << e.FullPath << " FROM " << otherE.FullPath << endl;
+					cout << "COPY " << e.FullPath << " FROM " << otherE.FullPath << endl;
+				}
+			}
+			if (!e.ShouldBeMovedTo.empty())
+			{
+				cout << "MOVE " << e.FullPath << " TO " << tctRight.RelativeRootPath << '\\' << e.ShouldBeMovedTo << endl;
+			}
+			if (!e.ShouldBeRenamedTo.empty())
+			{
+				if (!e.ShouldBeMovedTo.empty())
+				{
+					cout << "RENAME " << tctRight.RelativeRootPath << '\\' << e.ShouldBeMovedTo << " TO " << e.ShouldBeRenamedTo
+						<< " # Moved by the previus command" << endl;
+				}
+				else
+				{
+					cout << "RENAME " << e.FullPath << " TO " << e.ShouldBeRenamedTo << endl;
 				}
 			}
 			if (e.ShouldBeDeleted)
 			{
 				if (e.Type == File)
 				{
-					cout << "COPY TO " << tctLeft.RelativeRootPath << '\\' << e.RelativePath << " FROM " << e.FullPath << endl;
+					cout << "COPY " << tctLeft.RelativeRootPath << '\\' << e.RelativePath << " FROM " << e.FullPath << endl;
 				}
 				else
 				{
@@ -424,7 +444,7 @@ CommandResult Analyze::Standard(int argc, char * argv[]) const
 	};
 }
 
-CommandResult cmds::Analyze::ReadOptions(int argc, char * argv[], size_t & off) const
+CommandResult cmds::Analyze::ReadOptions(int argc, const char * argv[], size_t & off) const
 {
 	off = 0;
 	for (size_t i = 0; i < argc && argv[i][0] == '-'; ++i)
@@ -454,7 +474,7 @@ CommandResult cmds::Analyze::ReadOptions(int argc, char * argv[], size_t & off) 
 	};
 }
 
-CommandResult Analyze::Execute(int argc, char * argv[]) const
+CommandResult Analyze::Execute(int argc, const char * argv[])
 {
 	if (strcmp(argv[0], "mirror") == 0)
 	{
@@ -474,11 +494,11 @@ CommandResult Analyze::Execute(int argc, char * argv[]) const
 	return CommandResult() =
 	{
 		false,
-		"This is not a command. Type help for more details."
+		"This is not a command. Type sync.exe help for more details."
 	};
 }
 
-const Command * cmds::Analyze::Create()
+Command * cmds::Analyze::Create()
 {
-	return new const Analyze();
+	return new Analyze();
 }

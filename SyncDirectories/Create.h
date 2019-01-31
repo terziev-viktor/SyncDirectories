@@ -3,16 +3,16 @@
 
 namespace cmds
 {
-	class Perform : public Command
+
+	class CREATE : public Command
 	{
 	public:
-		Perform();
-		~Perform();
+		CREATE();
 
 		// Inherited via Command
 		virtual CommandResult Execute(int argc, const char * argv[]) override;
 
 		static Command * Create();
 	};
-}
 
+}

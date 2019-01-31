@@ -10,8 +10,8 @@ namespace cmds
 		~Help();
 
 		// Inherited via Command
-		virtual CommandResult Execute(int argc, char * argv[]) const override;
+		virtual CommandResult Execute(int argc, const char * argv[]) override;
 
-		static const Command * Create();
+		static Command * Create();
 	};
 }
