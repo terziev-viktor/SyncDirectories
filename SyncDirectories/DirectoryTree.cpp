@@ -3,8 +3,12 @@
 #include <iostream>
 #include <fstream>
 
-bool dirtree::Entity::CompareByteByByte(const Entity & other) const
+bool Entity::CompareByteByByte(const Entity & other) const
 {
+	if (this->Size() != other.Size())
+	{
+		return false;
+	}
 	std::ifstream in1(this->FullPath.string(), std::ios::binary);
 	std::ifstream in2(other.FullPath.string(), std::ios::binary);
 	if (!in1 || !in2)
@@ -17,16 +21,11 @@ bool dirtree::Entity::CompareByteByByte(const Entity & other) const
 	unique_ptr<char> thisBuffer(new char[Entity::BlockSize]);
 	unique_ptr<char> otherBuffer(new char[Entity::BlockSize]);
 
-	for (size_t i = 0; i < Entity::BlockSize; ++i)
-	{
-		thisBuffer.get()[i] = 0;
-		otherBuffer.get()[i] = 0;
-	}
-	while (in1 && in2)
+	while (in1.eof())
 	{
 		in1.read(thisBuffer.get(), Entity::BlockSize);
 		in2.read(otherBuffer.get(), Entity::BlockSize);
-		for (size_t i = 0; i < Entity::BlockSize; ++i)
+		for (size_t i = 0; i < in1.gcount(); ++i)
 		{
 			if (thisBuffer.get()[i] != otherBuffer.get()[i])
 			{
@@ -34,10 +33,6 @@ bool dirtree::Entity::CompareByteByByte(const Entity & other) const
 				in2.close();
 				return false;
 			}
-		}
-		if (in1.eof() || in2.eof())
-		{
-			break;
 		}
 	}
 
@@ -47,12 +42,12 @@ bool dirtree::Entity::CompareByteByByte(const Entity & other) const
 	return true;
 }
 
-void dirtree::Entity::SetSize(uintmax_t fileSize)
+void Entity::SetSize(uintmax_t fileSize)
 {
 	this->fileSize = fileSize;
 }
 
-uintmax_t dirtree::Entity::Size() const
+uintmax_t Entity::Size() const
 {
 	if (this->Type == File)
 	{
@@ -64,17 +59,17 @@ uintmax_t dirtree::Entity::Size() const
 	}
 }
 
-vector<HashValue>& dirtree::Entity::GetBlockHashes()
+vector<HashValue>& Entity::GetBlockHashes()
 {
 	return this->fileAsHashes;
 }
 
-const vector<HashValue>& dirtree::Entity::GetBlockHashes() const
+const vector<HashValue>& Entity::GetBlockHashes() const
 {
 	return this->fileAsHashes;
 }
 
-bool dirtree::Entity::operator==(const Entity & other) const
+bool Entity::operator==(const Entity & other) const
 {
 	if (this->Type != other.Type)
 	{
@@ -97,7 +92,7 @@ bool dirtree::Entity::operator==(const Entity & other) const
 	}
 }
 
-bool dirtree::Entity::operator<(const Entity & other) const
+bool Entity::operator<(const Entity & other) const
 {
 	if (this->Type != other.Type)
 	{
@@ -113,7 +108,7 @@ bool dirtree::Entity::operator<(const Entity & other) const
 	}
 }
 
-bool dirtree::Entity::CompareByLabel(const Entity & other) const
+bool Entity::CompareByLabel(const Entity & other) const
 {
 	return this->Type == other.Type &&
 		this->Hash == other.Hash;
@@ -270,7 +265,7 @@ void dirtree::TreeComparingTable::CheckIsomorphisSubtrees(TreeComparingTable & o
 	}
 }
 
-dirtree::Entity * dirtree::TreeComparingTable::FindFile(const Entity & file)
+Entity * dirtree::TreeComparingTable::FindFile(const Entity & file)
 {
 	EntityInfo info = 
 	{
@@ -297,12 +292,12 @@ dirtree::Entity * dirtree::TreeComparingTable::FindFile(const Entity & file)
 	return nullptr;
 }
 
-dirtree::Entity & dirtree::TreeComparingTable::operator[](const EntityInfo & info)
+Entity & dirtree::TreeComparingTable::operator[](const EntityInfo & info)
 {
 	return this->NthLevel(info.depth)[info.RelativePath];
 }
 
-dirtree::Entity & dirtree::TreeComparingTable::TreeRoot()
+Entity & dirtree::TreeComparingTable::TreeRoot()
 {
 	return this->at(0).begin()->second;
 }
@@ -319,9 +314,11 @@ void dirtree::TreeComparingTable::SaveHashes(const std::string path_to_bin_file)
 	{
 		Entity & file = (*this)[this->files[i]];
 		size_t s = file.GetBlockHashes().size();
-		out.write(reinterpret_cast<char*>(file.FullPath.string().size()), sizeof(size_t));
-		out.write(file.FullPath.string().c_str(), sizeof(file.FullPath.string().size()));
-		out.write(reinterpret_cast<char*>(s), sizeof(s));
+		string fpath = file.FullPath.string();
+		size_t fpathLen = fpath.length() + 1;
+		out.write(reinterpret_cast<char*>(&fpathLen), sizeof(size_t));
+		out.write(fpath.c_str(), fpathLen);
+		out.write(reinterpret_cast<char*>(&s), sizeof(s));
 		for (size_t i = 0; i < s; ++i)
 		{
 			out.write(reinterpret_cast<char*>(&file.GetBlockHashes()[i]), sizeof(HashValue));
@@ -330,6 +327,6 @@ void dirtree::TreeComparingTable::SaveHashes(const std::string path_to_bin_file)
 	out.close();
 }
 
-bool dirtree::Entity::Block = false;
+bool Entity::Block = false;
 
-bool dirtree::Entity::HashOnly = false;
+bool Entity::HashOnly = false;

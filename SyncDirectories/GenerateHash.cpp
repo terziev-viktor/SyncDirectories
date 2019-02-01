@@ -1,6 +1,6 @@
 #include "GenerateHash.h"
 #include "libs.h"
-#include "DirectoryTree.h"
+#include "Entity.h"
 #include <vector>
 #include <fstream>
 
@@ -11,11 +11,11 @@ void GenerateHashForFile(const string & path_to_file, uint32_t * hash_buffer)
 	std::ifstream ifs(path_to_file, std::ios::binary);
 	SHA1 sha;
 	{
-		std::unique_ptr<char> buff(new char[dirtree::Entity::BlockSize]);
+		std::unique_ptr<char> buff(new char[Entity::BlockSize]);
 
 		while (!ifs.eof())
 		{
-			ifs.read(buff.get(), dirtree::Entity::BlockSize);
+			ifs.read(buff.get(), Entity::BlockSize);
 			sha.processBytes(buff.get(), ifs.gcount());
 		}
 		sha.getDigest(hash_buffer);
@@ -40,12 +40,12 @@ void GenerateHashForFile(const string & path_to_file, std::vector<HashValue> & h
 	uint32_t blockHash[5];
 
 	{
-		std::unique_ptr<char> buff(new char[dirtree::Entity::BlockSize]);
+		std::unique_ptr<char> buff(new char[Entity::BlockSize]);
 
 		while (!ifs.eof())
 		{
-			ifs.read(buff.get(), dirtree::Entity::BlockSize);
-			GenerateHash(buff.get(), dirtree::Entity::BlockSize, blockHash);
+			ifs.read(buff.get(), Entity::BlockSize);
+			GenerateHash(buff.get(), ifs.gcount(), blockHash);
 			hash_buffer.push_back(blockHash);
 		}
 		

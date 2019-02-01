@@ -20,7 +20,7 @@ namespace cmds
 		~Analyze();
 
 		// Inherited via Command
-		virtual CommandResult Execute(int, const char * argv[]) override;
+		CommandResult Execute(int, const char * argv[]) override;
 
 		static Command * Create();
 	};

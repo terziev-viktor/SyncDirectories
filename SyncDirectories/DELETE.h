@@ -1,13 +1,13 @@
 #pragma once
-#include "Move.h"
+#include "Command.h"
+
 namespace cmds
 {
-	class Rename : public Command
+
+	class DELETE : public Command
 	{
-	private:
-		Move mv;
 	public:
-		Rename();
+		DELETE();
 
 		// Inherited via Command
 		CommandResult Execute(int argc, const char * argv[]) override;

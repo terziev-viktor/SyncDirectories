@@ -48,7 +48,7 @@ void BuildTCT(TreeComparingTable & tct, const char * p)
 
 		if (is_regular_file(i->path()))
 		{
-			e.Type = dirtree::EntityType::File;
+			e.Type = EntityType::File;
 			e.SetSize(file_size(e.FullPath));
 
 			uint32_t buffer[5];
@@ -225,12 +225,31 @@ CommandResult Analyze::Mirror(int argc, const char * argv[]) const
 	// Handling the different subdirectories
 	vector<Entity> ShouldBeCreated;
 	_Mirror(tctLeft, tctRight, ShouldBeCreated);
-	cout << (Entity::HashOnly ? "hash-only" : "not-hash-only") << (Entity::Block ? "block" : "not-block") << endl;
+
+	std::ofstream out("sync.txt");
+	if (!out)
+	{
+		out.close();
+		return CommandResult() = 
+		{
+			false, "Could not open file"
+		};
+	}
+
+	out << (Entity::HashOnly ? "hash-only" : "not-hash-only") << " " << (Entity::Block ? "block" : "not-block") << endl;
 	for (size_t i = 0; i < ShouldBeCreated.size(); ++i)
 	{
-		std::cout << "CREATE " << ShouldBeCreated[i].FullPath << std::endl;
+		if (ShouldBeCreated[i].Type == File)
+		{
+			out << "COPY " << tctRight.RelativeRootPath << '\\' << ShouldBeCreated[i].RelativePath 
+				<< " FROM " << ShouldBeCreated[i].FullPath << endl;
+		}
+		else
+		{
+			out << "CREATE " << tctRight.RelativeRootPath << '\\' << ShouldBeCreated[i].RelativePath << '\n';
+		}
 	}
-	for (size_t i = 1; i < tctRight.size(); ++i)
+	for (int i = tctRight.size() - 1; i >= 0; --i)
 	{
 		Level & lvl = tctRight.NthLevel(i);
 		for (auto& j : lvl)
@@ -238,31 +257,31 @@ CommandResult Analyze::Mirror(int argc, const char * argv[]) const
 			Entity & e = j.second;
 			if (!e.ShouldCopyFrom.RelativePath.empty())
 			{
-				cout << "COPY " << e.FullPath << " FROM " << tctLeft.RelativeRootPath << '\\' << e.ShouldCopyFrom.RelativePath << endl;
+				out << "COPY " << e.FullPath << " FROM " << tctLeft.RelativeRootPath << '\\' << e.ShouldCopyFrom.RelativePath << '\n';
 			}
 			if (!e.ShouldBeMovedTo.empty())
 			{
-				cout << "MOVE " << e.FullPath << " TO " << tctRight.RelativeRootPath << '\\' << e.ShouldBeMovedTo << endl;
+				out << "MOVE " << e.FullPath << " TO " << tctRight.RelativeRootPath << '\\' << e.ShouldBeMovedTo << endl;
 			}
 			if (!e.ShouldBeRenamedTo.empty())
 			{
 				if (!e.ShouldBeMovedTo.empty())
 				{
-					cout << "RENAME " << tctRight.RelativeRootPath << '\\' << e.ShouldBeMovedTo << " TO " << e.ShouldBeRenamedTo
+					out << "RENAME " << tctRight.RelativeRootPath << '\\' << e.ShouldBeMovedTo << " TO " << e.ShouldBeRenamedTo
 						<< " # Moved by the previus command" << endl;
 				}
 				else
 				{
-					cout << "RENAME " << e.FullPath << " TO " << e.ShouldBeRenamedTo << endl;
+					out << "RENAME " << e.FullPath << " TO " << e.ShouldBeRenamedTo << endl;
 				}
 			}
 			if (e.ShouldBeDeleted)
 			{
-				cout << "DELETE " << e.FullPath << endl;
+				out << "DELETE " << e.FullPath << endl;
 			}
 		}
 	}
-
+	out.close();
 	if (Entity::Block)
 	{
 		tctLeft.SaveHashes("sync.bin");
@@ -301,13 +320,31 @@ CommandResult Analyze::Safe(int argc, const char * argv[]) const
 	// The same as in Mirror but deletions are now creations of directories (or copying files)
 	_Mirror(tctLeft, tctRight, ShouldBeCreated);
 
-	cout << (Entity::HashOnly ? "hash-only" : "not-hash-only") << (Entity::Block ? "block" : "not-block") << endl;
-	for (size_t i = 0; i < ShouldBeCreated.size(); ++i)
+	std::ofstream out("sync.txt");
+	if (!out)
 	{
-		std::cout << "CREATE " << ShouldBeCreated[i].FullPath << std::endl;
+		out.close();
+		return CommandResult() =
+		{
+			false, "Could not open file"
+		};
 	}
 
-	for (size_t i = 1; i < tctRight.size(); ++i)
+	out << (Entity::HashOnly ? "hash-only" : "not-hash-only") << " " << (Entity::Block ? "block" : "not-block") << endl;
+	for (size_t i = 0; i < ShouldBeCreated.size(); ++i)
+	{
+		if (ShouldBeCreated[i].Type == File)
+		{
+			out << "COPY " << tctRight.RelativeRootPath << '\\' << ShouldBeCreated[i].RelativePath
+				<< " FROM " << ShouldBeCreated[i].FullPath << endl;
+		}
+		else
+		{
+			out << "CREATE " << tctRight.RelativeRootPath << '\\' << ShouldBeCreated[i].RelativePath << '\n';
+		}
+	}
+
+	for (size_t i = tctRight.size() - 1; i >= 0; --i)
 	{
 		Level & lvl = tctRight.NthLevel(i);
 		for (auto& j : lvl)
@@ -315,39 +352,39 @@ CommandResult Analyze::Safe(int argc, const char * argv[]) const
 			Entity & e = j.second;
 			if (!e.ShouldCopyFrom.RelativePath.empty())
 			{
-				cout << "COPY " << e.FullPath << " FROM " << tctLeft.RelativeRootPath << '\\' << e.ShouldCopyFrom.RelativePath << endl;
+				out << "COPY " << e.FullPath << " FROM " << tctLeft.RelativeRootPath << '\\' << e.ShouldCopyFrom.RelativePath << endl;
 			}
 			if (!e.ShouldBeMovedTo.empty())
 			{
-				cout << "MOVE " << e.FullPath << " TO " << tctRight.RelativeRootPath << '\\' << e.ShouldBeMovedTo << endl;
+				out << "MOVE " << e.FullPath << " TO " << tctRight.RelativeRootPath << '\\' << e.ShouldBeMovedTo << endl;
 			}
 			if (!e.ShouldBeRenamedTo.empty())
 			{
 				if (!e.ShouldBeMovedTo.empty())
 				{
-					cout << "RENAME " << tctRight.RelativeRootPath << '\\' << e.ShouldBeMovedTo << " TO " << e.ShouldBeRenamedTo
+					out << "RENAME " << tctRight.RelativeRootPath << '\\' << e.ShouldBeMovedTo << " TO " << e.ShouldBeRenamedTo
 						<< " # Moved by the previous command" << endl;
 				}
 				else
 				{
-					cout << "RENAME " << e.FullPath << " TO " << e.ShouldBeRenamedTo << endl;
+					out << "RENAME " << e.FullPath << " TO " << e.ShouldBeRenamedTo << endl;
 				}
 			}
 			if (e.ShouldBeDeleted)
 			{
 				if (e.Type == File)
 				{
-					cout << "COPY " << tctLeft.RelativeRootPath << '\\' << e.RelativePath << " FROM " << e.FullPath << endl;
+					out << "COPY " << tctLeft.RelativeRootPath << '\\' << e.RelativePath << " FROM " << e.FullPath << endl;
 				}
 				else
 				{
-					cout << "CREATE " << tctLeft.RelativeRootPath << '\\' << e.RelativePath << endl;
+					out << "CREATE " << tctLeft.RelativeRootPath << '\\' << e.RelativePath << endl;
 				}
 
 			}
 		}
 	}
-
+	out.close();
 	return CommandResult() =
 	{
 		true,
@@ -380,14 +417,30 @@ CommandResult Analyze::Standard(int argc, const char * argv[]) const
 	vector<Entity> ShouldBeCreated;
 	// The same as in Mirror but deletions are now creations of directories (or copying files with newer date)
 	_Mirror(tctLeft, tctRight, ShouldBeCreated);
-
-	cout << (Entity::HashOnly ? "hash-only" : "not-hash-only") << (Entity::Block ? "block" : "not-block") << endl;
-	for (size_t i = 0; i < ShouldBeCreated.size(); ++i)
+	std::ofstream out("sync.txt");
+	if (!out)
 	{
-		std::cout << "CREATE " << ShouldBeCreated[i].FullPath << std::endl;
+		out.close();
+		return CommandResult() =
+		{
+			false, "Could not open file"
+		};
 	}
 
-	for (size_t i = 1; i < tctRight.size(); ++i)
+	out << (Entity::HashOnly ? "hash-only" : "not-hash-only") << " " << (Entity::Block ? "block" : "not-block") << endl;
+	for (size_t i = 0; i < ShouldBeCreated.size(); ++i)
+	{
+		if (ShouldBeCreated[i].Type == File)
+		{
+			out << "COPY " << tctRight.RelativeRootPath << '\\' << ShouldBeCreated[i].RelativePath
+				<< " FROM " << ShouldBeCreated[i].FullPath << endl;
+		}
+		else
+		{
+			out << "CREATE " << tctRight.RelativeRootPath << '\\' << ShouldBeCreated[i].RelativePath << '\n';
+		}
+	}
+	for (size_t i = tctRight.size() - 1; i >= 0; --i)
 	{
 		Level & lvl = tctRight.NthLevel(i);
 		for (auto& j : lvl)
@@ -399,44 +452,44 @@ CommandResult Analyze::Standard(int argc, const char * argv[]) const
 				Entity & otherE = tctLeft[e.ShouldCopyFrom];
 				if (otherE.Date < e.Date)
 				{
-					cout << "COPY " << otherE.FullPath << " FROM " << e.FullPath << " # saving the newer copy" << endl;
+					out << "COPY " << otherE.FullPath << " FROM " << e.FullPath << " # saving the newer copy" << endl;
 				}
 				else
 				{
-					cout << "COPY " << e.FullPath << " FROM " << otherE.FullPath << endl;
+					out << "COPY " << e.FullPath << " FROM " << otherE.FullPath << endl;
 				}
 			}
 			if (!e.ShouldBeMovedTo.empty())
 			{
-				cout << "MOVE " << e.FullPath << " TO " << tctRight.RelativeRootPath << '\\' << e.ShouldBeMovedTo << endl;
+				out << "MOVE " << e.FullPath << " TO " << tctRight.RelativeRootPath << '\\' << e.ShouldBeMovedTo << endl;
 			}
 			if (!e.ShouldBeRenamedTo.empty())
 			{
 				if (!e.ShouldBeMovedTo.empty())
 				{
-					cout << "RENAME " << tctRight.RelativeRootPath << '\\' << e.ShouldBeMovedTo << " TO " << e.ShouldBeRenamedTo
+					out << "RENAME " << tctRight.RelativeRootPath << '\\' << e.ShouldBeMovedTo << " TO " << e.ShouldBeRenamedTo
 						<< " # Moved by the previus command" << endl;
 				}
 				else
 				{
-					cout << "RENAME " << e.FullPath << " TO " << e.ShouldBeRenamedTo << endl;
+					out << "RENAME " << e.FullPath << " TO " << e.ShouldBeRenamedTo << endl;
 				}
 			}
 			if (e.ShouldBeDeleted)
 			{
 				if (e.Type == File)
 				{
-					cout << "COPY " << tctLeft.RelativeRootPath << '\\' << e.RelativePath << " FROM " << e.FullPath << endl;
+					out << "COPY " << tctLeft.RelativeRootPath << '\\' << e.RelativePath << " FROM " << e.FullPath << endl;
 				}
 				else
 				{
-					cout << "CREATE " << tctLeft.RelativeRootPath << '\\' << e.RelativePath << endl;
+					out << "CREATE " << tctLeft.RelativeRootPath << '\\' << e.RelativePath << endl;
 				}
 
 			}
 		}
 	}
-
+	out.close();
 	return CommandResult() =
 	{
 		true,

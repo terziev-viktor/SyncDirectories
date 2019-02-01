@@ -10,7 +10,8 @@ cmds::Move::Move()
 
 cmds::CommandResult cmds::Move::Execute(int argc, const char * argv[])
 {
-	std::string arg(argv[0]); // \some\path\to\file TO \other\path\to\file  # bla bla
+	std::string arg = argv[0];
+	// \some\path\to\file TO \other\path\to\file  # bla bla
 	std::string left, right;
 	size_t n = arg.find(' ');
 	left = arg.substr(0, n);

@@ -1,16 +1,18 @@
 #pragma once
 #include "Command.h"
+#include "PerformCommandExecutor.h"
 
 namespace cmds
 {
 	class Perform : public Command
 	{
+	private:
+		PerformCommandExecutor executor;
 	public:
 		Perform();
-		~Perform();
 
 		// Inherited via Command
-		virtual CommandResult Execute(int argc, const char * argv[]) override;
+		CommandResult Execute(int argc, const char * argv[]) override;
 
 		static Command * Create();
 	};

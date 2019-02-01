@@ -10,10 +10,10 @@ cmds::CREATE::CREATE()
 
 cmds::CommandResult cmds::CREATE::Execute(int argc, const char * argv[])
 {
-	std::string str(argv[0]);
+	std::string arg = argv[0];
 	try
 	{
-		create_directory(str);
+		create_directory(arg);
 	}
 	catch (const std::exception& e)
 	{
@@ -23,7 +23,7 @@ cmds::CommandResult cmds::CREATE::Execute(int argc, const char * argv[])
 		};	
 	}
 	
-	return CommandResult() = { true, "" };
+	return CommandResult() = { true };
 }
 
 cmds::Command * cmds::CREATE::Create()

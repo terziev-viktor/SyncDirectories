@@ -1,20 +1,12 @@
 #include "Perform.h"
-#include "PerformCommandExecutor.h"
-#include <fstream>
 #include <string>
-using std::string;
+#include <fstream>
+#include "Entity.h"
 using std::ifstream;
+using std::string;
 
-using namespace cmds;
-
-
-Perform::Perform()
+cmds::Perform::Perform()
 	:Command("perform")
-{
-
-}
-
-Perform::~Perform()
 {
 
 }
@@ -31,7 +23,6 @@ const char * GetToken(const char * str, const char delimeter)
 	}
 
 	return str;
-
 }
 CommandResult cmds::Perform::Execute(int argc, const char * argv[])
 {
@@ -43,13 +34,15 @@ CommandResult cmds::Perform::Execute(int argc, const char * argv[])
 			"No path to sync.txt"
 		};
 	}
-	PerformCommandExecutor exe;
+
 	string current;
 	string inp;
-	std::vector<string> commandNames;
-	std::vector<string> commandArgs;
+	string commandName;
+	string commandArg;
+	CommandResult r;
+	
 	{ // reading sync.txt
-		
+
 		ifstream in;
 		in.open(argv[0]);
 
@@ -62,31 +55,44 @@ CommandResult cmds::Perform::Execute(int argc, const char * argv[])
 				"The file sync.txt could not be opened or found"
 			};
 		}
+		const char * args[1];
+		in >> commandName;
+		if (commandName == "hash-only")
+		{
+			Entity::HashOnly = true;
+		}
+		in >> commandName;
+		if (commandName == "block")
+		{
+			Entity::Block = true;
+		}
+		in.ignore();
 		while (!in.eof())
 		{
-			in >> inp;
+			in >> commandName;
+			if (in.eof())
+			{
+				break;
+			}
 			in.ignore();
-			commandNames.push_back(inp);
-			getline(in, inp);
-			commandArgs.push_back(inp);
+			getline(in, commandArg);
+			args[0] = commandArg.data();
+			try
+			{
+				r = this->executor.Execute(commandName, 1, args);
+				if (!r.Successful)
+				{
+					in.close();
+					return r;
+				}
+			}
+			catch (const std::exception& e)
+			{
+				in.close();
+				return CommandResult() = { false, e.what() };
+			}
 		}
 		in.close();
-	}
-
-	std::unique_ptr<const char*> args(new const char*[commandArgs.size()]);
-
-	for (size_t i = 0; i < commandArgs.size(); ++i)
-	{
-		args.get()[i] = commandArgs[i].c_str();
-	}
-	CommandResult r;
-	for (size_t i = 0; i < commandNames.size(); ++i)
-	{
-		r = exe.Execute(commandNames[i], 1, args.get() + i);
-		if (!r.Successful)
-		{
-			return r;
-		}
 	}
 
 	return CommandResult() =
@@ -96,7 +102,7 @@ CommandResult cmds::Perform::Execute(int argc, const char * argv[])
 	};
 }
 
-Command * cmds::Perform::Create()
+cmds::Command * cmds::Perform::Create()
 {
 	return new Perform();
 }

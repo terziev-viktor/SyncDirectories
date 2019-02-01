@@ -120,6 +120,7 @@
     <ClCompile Include="CommandExecutor.cpp" />
     <ClCompile Include="Copy.cpp" />
     <ClCompile Include="Create.cpp" />
+    <ClCompile Include="DELETE.cpp" />
     <ClCompile Include="DirectoryTree.cpp" />
     <ClCompile Include="GenerateHash.cpp" />
     <ClCompile Include="HashValue.cpp" />
@@ -137,7 +138,9 @@
     <ClInclude Include="CommandExecutor.h" />
     <ClInclude Include="Copy.h" />
     <ClInclude Include="Create.h" />
+    <ClInclude Include="DELETE.h" />
     <ClInclude Include="DirectoryTree.h" />
+    <ClInclude Include="Entity.h" />
     <ClInclude Include="GenerateHash.h" />
     <ClInclude Include="HashValue.h" />
     <ClInclude Include="Help.h" />

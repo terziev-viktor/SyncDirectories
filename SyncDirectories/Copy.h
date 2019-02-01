@@ -17,7 +17,7 @@ namespace cmds
 		void LoadFiles();
 
 		// Inherited via Command
-		virtual CommandResult Execute(int argc, const char * argv[]) override;
+		CommandResult Execute(int argc, const char * argv[]) override;
 
 		static Command * Create();
 	};
