@@ -14,7 +14,7 @@ namespace cmds
 	public:
 		Copy();
 
-		void LoadFiles();
+		CommandResult LoadFiles();
 
 		// Inherited via Command
 		CommandResult Execute(int argc, const char * argv[]) override;

@@ -151,7 +151,6 @@
     <ClInclude Include="Rename.h" />
     <ClInclude Include="SortedVector.h" />
     <ClInclude Include="SyncCommandExecutor.h" />
-    <ClInclude Include="ToByteArray.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

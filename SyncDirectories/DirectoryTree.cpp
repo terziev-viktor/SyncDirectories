@@ -25,6 +25,10 @@ bool Entity::CompareByteByByte(const Entity & other) const
 	{
 		in1.read(thisBuffer.get(), Entity::BlockSize);
 		in2.read(otherBuffer.get(), Entity::BlockSize);
+		if (in1.eof())
+		{
+			break;
+		}
 		for (size_t i = 0; i < in1.gcount(); ++i)
 		{
 			if (thisBuffer.get()[i] != otherBuffer.get()[i])
@@ -116,12 +120,14 @@ bool Entity::CompareByLabel(const Entity & other) const
 
 dirtree::Level & dirtree::TreeComparingTable::NthLevel(size_t n)
 {
-	this->reserve(n + 1);
-	while (this->size() < n + 1)
+	if (n >= this->size())
 	{
-		this->push_back(unordered_map<string, Entity>());
+		this->reserve(n + 1);
+		while (this->size() < n + 1)
+		{
+			this->push_back(unordered_map<string, Entity>());
+		}
 	}
-
 	return this->at(n);
 }
 

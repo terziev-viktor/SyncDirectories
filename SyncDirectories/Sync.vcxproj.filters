@@ -95,9 +95,6 @@
     <ClInclude Include="SortedVector.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="ToByteArray.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="SyncCommandExecutor.h">
       <Filter>Header Files</Filter>
     </ClInclude>

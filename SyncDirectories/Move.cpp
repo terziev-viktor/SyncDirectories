@@ -1,6 +1,7 @@
 #include "Move.h"
 #include <experimental/filesystem>
-using namespace std::experimental::filesystem;
+using std::experimental::filesystem::exists;
+using std::experimental::filesystem::rename;
 
 cmds::Move::Move()
 	:Command("MOVE")
@@ -17,6 +18,10 @@ cmds::CommandResult cmds::Move::Execute(int argc, const char * argv[])
 	left = arg.substr(0, n);
 	n += 4; // skipping "TO "
 	right = arg.substr(n, arg.find_first_of(" #\n", n) - n);
+	if (!exists(left))
+	{
+		return CommandResult() = { false, left + " not found" };
+	}
 	try
 	{
 		rename(left, right);

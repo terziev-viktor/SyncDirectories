@@ -1,16 +1,11 @@
 #include "SyncCommandExecutor.h"
-#include "SortedVector.h"
-#include <ctime>
 using namespace cmds;
-#include <experimental/filesystem>
-using namespace experimental::filesystem;
-
 
 int main(int argc, char * argv[])
 {
 	SyncCommandExecutor executor;
 	// Test1 ---------------
-	int test_argc = 3;
+	int test_argc = 7;
 	const char * test_argv[7];
 	char a[10];
 	char b[10];
@@ -24,8 +19,8 @@ int main(int argc, char * argv[])
 	strcpy_s(c, 15, "sync.txt");
 	strcpy_s(d, 15, "-hash-only");
 	strcpy_s(e, 15, "-block");
-	strcpy_s(f, 40, "C:\\Users\\terzi\\Desktop\\Home");
-	strcpy_s(g, 40, "C:\\Users\\terzi\\Desktop\\Home2");
+	strcpy_s(f, 40, "C:\\Users\\terzi\\Desktop\\folder1");
+	strcpy_s(g, 40, "C:\\Users\\terzi\\Desktop\\folder2");
 	test_argv[0] = a;
 	test_argv[1] = b;
 	test_argv[2] = c;

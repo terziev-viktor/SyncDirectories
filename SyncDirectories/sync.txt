@@ -1,6 +1,11 @@
 hash-only block
-COPY C:\Users\terzi\Desktop\Home2\A\file2.txt FROM C:\Users\terzi\Desktop\Home\A\file2.txt
-COPY C:\Users\terzi\Desktop\Home2\B\file6.txt FROM C:\Users\terzi\Desktop\Home\B\file6.txt
-DELETE C:\Users\terzi\Desktop\Home2\G\dsokgdsgdsg.txt
-DELETE C:\Users\terzi\Desktop\Home2\G
-DELETE C:\Users\terzi\Desktop\Home2\MacOS Mojave.vmdk
+CREATE C:\Users\terzi\Desktop\folder2\New folder
+CREATE C:\Users\terzi\Desktop\folder2\New folder (3)
+CREATE C:\Users\terzi\Desktop\folder2\New folder (2)
+CREATE C:\Users\terzi\Desktop\folder2\New folder (4)
+CREATE C:\Users\terzi\Desktop\folder2\New folder (5)
+CREATE C:\Users\terzi\Desktop\folder2\New folder (6)
+CREATE C:\Users\terzi\Desktop\folder2\New folder (8)
+CREATE C:\Users\terzi\Desktop\folder2\New folder (5)\New folder (7)
+CREATE C:\Users\terzi\Desktop\folder1\folder
+COPY C:\Users\terzi\Desktop\folder1\folder\dile.txt FROM C:\Users\terzi\Desktop\folder2\folder\dile.txt

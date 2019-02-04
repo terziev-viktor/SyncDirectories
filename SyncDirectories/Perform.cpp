@@ -66,7 +66,7 @@ CommandResult cmds::Perform::Execute(int argc, const char * argv[])
 		{
 			Entity::Block = true;
 		}
-		in.ignore();
+		in.ignore(); // ignoring new line
 		while (!in.eof())
 		{
 			in >> commandName;
@@ -94,7 +94,10 @@ CommandResult cmds::Perform::Execute(int argc, const char * argv[])
 		}
 		in.close();
 	}
-
+	if (exists("sync.bin"))
+	{
+		remove("sync.bin");
+	}
 	return CommandResult() =
 	{
 		true,

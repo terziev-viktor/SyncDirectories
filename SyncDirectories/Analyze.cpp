@@ -58,7 +58,7 @@ void BuildTCT(TreeComparingTable & tct, const char * p)
 			{
 				GenerateHashForFile(e.FullPath.string(), e.GetBlockHashes());
 			}
-			
+
 			e.Date = last_write_time(e.FullPath);
 			tct.Files().PushBack(EntityInfo() =
 				{
@@ -156,7 +156,7 @@ void _Mirror(TreeComparingTable & tctLeft, TreeComparingTable & tctRight, vector
 						f->Check = true;
 
 						if (rightEntity.RelativePath.parent_path() != f->RelativePath.parent_path())
-							rightEntity.ShouldBeMovedTo = f->RelativePath.parent_path();
+							rightEntity.ShouldBeMovedTo = f->RelativePath;
 
 						if (rightEntity.Name != f->Name)
 							rightEntity.ShouldBeRenamedTo = f->Name;
@@ -230,7 +230,7 @@ CommandResult Analyze::Mirror(int argc, const char * argv[]) const
 	if (!out)
 	{
 		out.close();
-		return CommandResult() = 
+		return CommandResult() =
 		{
 			false, "Could not open file"
 		};
@@ -241,7 +241,7 @@ CommandResult Analyze::Mirror(int argc, const char * argv[]) const
 	{
 		if (ShouldBeCreated[i].Type == File)
 		{
-			out << "COPY " << tctRight.RelativeRootPath << '\\' << ShouldBeCreated[i].RelativePath 
+			out << "COPY " << tctRight.RelativeRootPath << '\\' << ShouldBeCreated[i].RelativePath
 				<< " FROM " << ShouldBeCreated[i].FullPath << endl;
 		}
 		else
@@ -343,8 +343,18 @@ CommandResult Analyze::Safe(int argc, const char * argv[]) const
 			out << "CREATE " << tctRight.RelativeRootPath << '\\' << ShouldBeCreated[i].RelativePath << '\n';
 		}
 	}
+	for (int i = tctRight.size() - 1; i >= 0; --i)
+	{
+		Level & lvl = tctRight.NthLevel(i);
+		for (auto& j : lvl)
+		{
+			Entity & e = j.second;
+			if (e.ShouldBeDeleted && e.Type == Folder)
+				out << "CREATE " << tctLeft.RelativeRootPath << '\\' << e.RelativePath << endl;
+		}
+	}
 
-	for (size_t i = tctRight.size() - 1; i >= 0; --i)
+	for (int i = tctRight.size() - 1; i >= 0; --i)
 	{
 		Level & lvl = tctRight.NthLevel(i);
 		for (auto& j : lvl)
@@ -376,15 +386,15 @@ CommandResult Analyze::Safe(int argc, const char * argv[]) const
 				{
 					out << "COPY " << tctLeft.RelativeRootPath << '\\' << e.RelativePath << " FROM " << e.FullPath << endl;
 				}
-				else
-				{
-					out << "CREATE " << tctLeft.RelativeRootPath << '\\' << e.RelativePath << endl;
-				}
-
 			}
 		}
 	}
 	out.close();
+	if (Entity::Block)
+	{
+		tctLeft.SaveHashes("sync.bin");
+		tctRight.SaveHashes("sync.bin");
+	}
 	return CommandResult() =
 	{
 		true,
@@ -440,7 +450,17 @@ CommandResult Analyze::Standard(int argc, const char * argv[]) const
 			out << "CREATE " << tctRight.RelativeRootPath << '\\' << ShouldBeCreated[i].RelativePath << '\n';
 		}
 	}
-	for (size_t i = tctRight.size() - 1; i >= 0; --i)
+	for (int i = tctRight.size() - 1; i >= 0; --i)
+	{
+		Level & lvl = tctRight.NthLevel(i);
+		for (auto& j : lvl)
+		{
+			Entity & e = j.second;
+			if (e.ShouldBeDeleted && e.Type == Folder)
+				out << "CREATE " << tctLeft.RelativeRootPath << '\\' << e.RelativePath << endl;
+		}
+	}
+	for (int i = tctRight.size() - 1; i >= 0; --i)
 	{
 		Level & lvl = tctRight.NthLevel(i);
 		for (auto& j : lvl)
@@ -481,15 +501,15 @@ CommandResult Analyze::Standard(int argc, const char * argv[]) const
 				{
 					out << "COPY " << tctLeft.RelativeRootPath << '\\' << e.RelativePath << " FROM " << e.FullPath << endl;
 				}
-				else
-				{
-					out << "CREATE " << tctLeft.RelativeRootPath << '\\' << e.RelativePath << endl;
-				}
-
 			}
 		}
 	}
 	out.close();
+	if (Entity::Block)
+	{
+		tctLeft.SaveHashes("sync.bin");
+		tctRight.SaveHashes("sync.bin");
+	}
 	return CommandResult() =
 	{
 		true,

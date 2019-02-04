@@ -61,8 +61,10 @@ private:
 
 	uintmax_t fileSize;
 public:
-	static const size_t BlockSize = 64 * 1024 * 1024; // 64 MB
-													  // Comparing only file hashes not byte-by-byte
+	// 64 MB
+	static const size_t BlockSize = 10;
+
+	// Comparing only file hashes not byte-by-byte
 	static bool HashOnly;
 
 	// using block-hash comparrison for files

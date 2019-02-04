@@ -16,6 +16,10 @@ void GenerateHashForFile(const string & path_to_file, uint32_t * hash_buffer)
 		while (!ifs.eof())
 		{
 			ifs.read(buff.get(), Entity::BlockSize);
+			if (ifs.eof() && ifs.gcount() == 0)
+			{
+				break;
+			}
 			sha.processBytes(buff.get(), ifs.gcount());
 		}
 		sha.getDigest(hash_buffer);
@@ -33,7 +37,6 @@ void GenerateHash(const char * data, unsigned long long dataSize, uint32_t * has
 	sha.getDigest(hash_buffer);
 }
 
-
 void GenerateHashForFile(const string & path_to_file, std::vector<HashValue> & hash_buffer)
 {
 	std::ifstream ifs(path_to_file, std::ios::binary);
@@ -45,11 +48,14 @@ void GenerateHashForFile(const string & path_to_file, std::vector<HashValue> & h
 		while (!ifs.eof())
 		{
 			ifs.read(buff.get(), Entity::BlockSize);
+			if (ifs.eof() && ifs.gcount() == 0)
+			{
+				break;
+			}
 			GenerateHash(buff.get(), ifs.gcount(), blockHash);
 			hash_buffer.push_back(blockHash);
 		}
 		
 	}
-
 	ifs.close();
 }
