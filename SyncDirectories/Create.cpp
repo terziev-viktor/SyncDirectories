@@ -15,7 +15,7 @@ cmds::CommandResult cmds::CREATE::Execute(int argc, const char * argv[])
 	if (exists(arg))
 	{
 		std::cout << arg << " already exists so it will not be created" << std::endl;
-		return CommandResult() = { true };
+		return CommandResult { true };
 	}
 	try
 	{
@@ -23,13 +23,13 @@ cmds::CommandResult cmds::CREATE::Execute(int argc, const char * argv[])
 	}
 	catch (const std::exception& e)
 	{
-		return CommandResult() = 
+		return CommandResult 
 		{
 			false, e.what()
 		};	
 	}
 	
-	return CommandResult() = { true };
+	return CommandResult { true };
 }
 
 cmds::Command * cmds::CREATE::Create()

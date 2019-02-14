@@ -25,7 +25,7 @@ CommandResult cmds::Help::Execute(int argc, const char * argv[])
 	std::cout << "\t\tThe result is stored in a file called sync.txt where the user can edit the results of the analysis\n\n";
 	std::cout << "\tperform - reads sync.txt and performs the commands in it\n";
 
-	return CommandResult() =
+	return CommandResult
 	{
 		true, 
 		""

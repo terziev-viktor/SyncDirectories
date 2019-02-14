@@ -28,7 +28,7 @@ CommandResult cmds::Perform::Execute(int argc, const char * argv[])
 {
 	if (argc < 1)
 	{
-		return CommandResult() =
+		return CommandResult
 		{
 			false,
 			"No path to sync.txt"
@@ -49,7 +49,7 @@ CommandResult cmds::Perform::Execute(int argc, const char * argv[])
 		if (!in)
 		{
 			in.close();
-			return CommandResult() =
+			return CommandResult
 			{
 				false,
 				"The file sync.txt could not be opened or found"
@@ -89,7 +89,7 @@ CommandResult cmds::Perform::Execute(int argc, const char * argv[])
 			catch (const std::exception& e)
 			{
 				in.close();
-				return CommandResult() = { false, e.what() };
+				return CommandResult { false, e.what() };
 			}
 		}
 		in.close();
@@ -98,7 +98,7 @@ CommandResult cmds::Perform::Execute(int argc, const char * argv[])
 	{
 		remove("sync.bin");
 	}
-	return CommandResult() =
+	return CommandResult
 	{
 		true,
 		"All actions performed"

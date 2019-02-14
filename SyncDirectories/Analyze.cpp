@@ -215,7 +215,7 @@ CommandResult Analyze::Mirror(int argc, const char * argv[]) const
 
 	if (Entity::HashOnly && tctLeft.TreeRoot().Hash == tctRight.TreeRoot().Hash)
 	{
-		return CommandResult() =
+		return CommandResult
 		{
 			true,
 			"The Directories are already synchronized"
@@ -230,7 +230,7 @@ CommandResult Analyze::Mirror(int argc, const char * argv[]) const
 	if (!out)
 	{
 		out.close();
-		return CommandResult() =
+		return CommandResult
 		{
 			false, "Could not open file"
 		};
@@ -287,7 +287,7 @@ CommandResult Analyze::Mirror(int argc, const char * argv[]) const
 		tctLeft.SaveHashes("sync.bin");
 		tctRight.SaveHashes("sync.bin");
 	}
-	return CommandResult() =
+	return CommandResult
 	{
 		true,
 		"Directories analyzed. The output is in sync.txt"
@@ -308,7 +308,7 @@ CommandResult Analyze::Safe(int argc, const char * argv[]) const
 
 	if (Entity::HashOnly && tctLeft.TreeRoot().Hash == tctRight.TreeRoot().Hash)
 	{
-		return CommandResult() =
+		return CommandResult
 		{
 			true,
 			"The Directories are already synchronized"
@@ -324,7 +324,7 @@ CommandResult Analyze::Safe(int argc, const char * argv[]) const
 	if (!out)
 	{
 		out.close();
-		return CommandResult() =
+		return CommandResult
 		{
 			false, "Could not open file"
 		};
@@ -395,7 +395,7 @@ CommandResult Analyze::Safe(int argc, const char * argv[]) const
 		tctLeft.SaveHashes("sync.bin");
 		tctRight.SaveHashes("sync.bin");
 	}
-	return CommandResult() =
+	return CommandResult
 	{
 		true,
 		"Directories analyzed. The output is in sync.txt"
@@ -416,7 +416,7 @@ CommandResult Analyze::Standard(int argc, const char * argv[]) const
 
 	if (Entity::HashOnly && tctLeft.TreeRoot().Hash == tctRight.TreeRoot().Hash)
 	{
-		return CommandResult() =
+		return CommandResult
 		{
 			true,
 			"The Directories are already synchronized"
@@ -431,7 +431,7 @@ CommandResult Analyze::Standard(int argc, const char * argv[]) const
 	if (!out)
 	{
 		out.close();
-		return CommandResult() =
+		return CommandResult
 		{
 			false, "Could not open file"
 		};
@@ -510,7 +510,7 @@ CommandResult Analyze::Standard(int argc, const char * argv[]) const
 		tctLeft.SaveHashes("sync.bin");
 		tctRight.SaveHashes("sync.bin");
 	}
-	return CommandResult() =
+	return CommandResult
 	{
 		true,
 		"Directories analyzed. The output is in sync.txt"
@@ -534,14 +534,14 @@ CommandResult cmds::Analyze::ReadOptions(int argc, const char * argv[], size_t &
 		}
 		else
 		{
-			return CommandResult() =
+			return CommandResult
 			{
 				false,
 				"Invalid option for command analyze"
 			};
 		}
 	}
-	return CommandResult() =
+	return CommandResult
 	{
 		true
 	};
@@ -564,7 +564,7 @@ CommandResult Analyze::Execute(int argc, const char * argv[])
 		return this->Standard(argc - 1, argv + 1);
 	}
 
-	return CommandResult() =
+	return CommandResult
 	{
 		false,
 		"This is not a command. Type sync.exe help for more details."

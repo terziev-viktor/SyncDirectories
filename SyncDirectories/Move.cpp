@@ -20,7 +20,7 @@ cmds::CommandResult cmds::Move::Execute(int argc, const char * argv[])
 	right = arg.substr(n, arg.find_first_of(" #\n", n) - n);
 	if (!exists(left))
 	{
-		return CommandResult() = { false, left + " not found" };
+		return CommandResult { false, left + " not found" };
 	}
 	try
 	{
@@ -28,13 +28,13 @@ cmds::CommandResult cmds::Move::Execute(int argc, const char * argv[])
 	}
 	catch (const std::exception& e)
 	{
-		return CommandResult() =
+		return CommandResult
 		{
 			false, e.what()
 		};
 	}
 	
-	return CommandResult() = 
+	return CommandResult 
 	{
 		true, ""
 	};

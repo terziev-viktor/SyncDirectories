@@ -16,7 +16,7 @@ cmds::CommandResult cmds::DELETE::Execute(int argc, const char * argv[])
 	{
 		// Assuming it was already deleted by the user or by another process
 		std::cout << arg << " was moved or already deleted." << std::endl;
-		return CommandResult() =
+		return CommandResult
 		{
 			true
 		};
@@ -27,10 +27,10 @@ cmds::CommandResult cmds::DELETE::Execute(int argc, const char * argv[])
 	}
 	catch (const std::exception& e)
 	{
-		return CommandResult() = { false, e.what() };
+		return CommandResult { false, e.what() };
 	}
 
-	return CommandResult() = { true };
+	return CommandResult { true };
 }
 
 cmds::Command * cmds::DELETE::Create()

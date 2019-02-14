@@ -18,7 +18,7 @@ cmds::CommandResult cmds::Copy::LoadFiles()
 	if (!ifs)
 	{
 		ifs.close();
-		return CommandResult() = { false, "Could not open sync.bin" };
+		return CommandResult { false, "Could not open sync.bin" };
 	}
 	HashValue hshVal;
 	size_t size;
@@ -41,7 +41,7 @@ cmds::CommandResult cmds::Copy::LoadFiles()
 		}
 	}
 	ifs.close();
-	return CommandResult() = { true };
+	return CommandResult { true };
 }
 
 cmds::CommandResult cmds::Copy::Execute(int argc, const char * argv[])
@@ -63,7 +63,7 @@ cmds::CommandResult cmds::Copy::Execute(int argc, const char * argv[])
 	std::string readFromFile = arg.substr(n, arg.find_first_of(" #\n", n) - n);
 	if (!exists(readFromFile))
 	{
-		return CommandResult() =
+		return CommandResult
 		{
 			false,
 			string("Directory ") + readFromFile + string(" not found")
@@ -80,12 +80,12 @@ cmds::CommandResult cmds::Copy::Execute(int argc, const char * argv[])
 	if (!ifs)
 	{
 		ifs.close();
-		return CommandResult() = { false, string("Could not open ") + readFromFile + " file while performing a copy command" };
+		return CommandResult { false, string("Could not open ") + readFromFile + " file while performing a copy command" };
 	}
 	if (!ofs)
 	{
 		ofs.close();
-		return CommandResult() = { false, string("Could not open ") + outFile + " file while performing a copy command" };
+		return CommandResult { false, string("Could not open ") + outFile + " file while performing a copy command" };
 	}
 
 	std::unique_ptr<char> buffer(new char[Entity::BlockSize]);
@@ -126,7 +126,7 @@ cmds::CommandResult cmds::Copy::Execute(int argc, const char * argv[])
 	}
 	ifs.close();
 	ofs.close();
-	return CommandResult() =
+	return CommandResult
 	{
 		true
 	};
