@@ -3,6 +3,7 @@
 #include "GenerateHash.h"
 
 #include <fstream>
+#include <future>
 using namespace dirtree;
 using cmds::Analyze;
 using cmds::CommandResult;
@@ -85,12 +86,18 @@ void BuildTCT(TreeComparingTable & tct, const char * p)
 
 void BuildTCTs(TreeComparingTable & tctLeft, TreeComparingTable & tctRight, const char * argv[], size_t off)
 {
-	BuildTCT(tctLeft, argv[0 + off]);
-	BuildTCT(tctRight, argv[1 + off]);
+	future<void> f1 = async(BuildTCT, tctLeft, argv[0 + off]);
+	future<void> f2 = async(BuildTCT, tctRight, argv[1 + off]);
+	
+	f1.get();
+	f2.get();
 
 	// Labeling folders with hash of their contents
-	tctLeft.LabelByHash();
-	tctRight.LabelByHash();
+	f1 = async(tctLeft.LabelByHash);
+	f2 = async(tctRight.LabelByHash);
+
+	f1.get();
+	f2.get();
 
 	if (Entity::HashOnly)
 	{
