@@ -86,18 +86,18 @@ void BuildTCT(TreeComparingTable & tct, const char * p)
 
 void BuildTCTs(TreeComparingTable & tctLeft, TreeComparingTable & tctRight, const char * argv[], size_t off)
 {
-	future<void> f1 = async(BuildTCT, tctLeft, argv[0 + off]);
-	future<void> f2 = async(BuildTCT, tctRight, argv[1 + off]);
+	thread build_thread1(BuildTCT, tctLeft, argv[0 + off]);
+	thread build_thread2(BuildTCT, tctRight, argv[1 + off]);
 	
-	f1.get();
-	f2.get();
-
+	build_thread1.join();
 	// Labeling folders with hash of their contents
-	f1 = async(tctLeft.LabelByHash);
-	f2 = async(tctRight.LabelByHash);
+	thread label_thread1(&TreeComparingTable::LabelByHash, tctLeft);
 
-	f1.get();
-	f2.get();
+	build_thread2.join();
+	thread label_thread2(&TreeComparingTable::LabelByHash, tctRight);
+	
+	label_thread1.join();
+	label_thread2.join();
 
 	if (Entity::HashOnly)
 	{
