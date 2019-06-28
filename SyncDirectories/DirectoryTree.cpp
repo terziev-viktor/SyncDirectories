@@ -200,7 +200,7 @@ void dirtree::TreeComparingTable::LabelByHash()
 void dirtree::TreeComparingTable::SortByHash(vector<string>& subdirs, size_t depth)
 {
 	TreeComparingTable* self = this;
-	std::sort(subdirs.begin(), subdirs.end(), [self, depth](const string& a, const string& b)->int {
+	std::sort(subdirs.begin(), subdirs.end(), [self, depth](const string& a, const string& b)->bool {
 		return self->CompareSubdirsByHash(a, b, depth);
 	});
 }
