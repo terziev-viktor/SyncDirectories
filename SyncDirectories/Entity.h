@@ -105,7 +105,7 @@ public:
 	v1::path RelativePath;
 
 	// Unique id of the folder, 
-	// if 2 subtrees have the same label they are the isomorphic
+	// if 2 subtrees have the same label they are isomorphic
 	HashValue Hash;
 
 	vector<HashValue> & GetBlockHashes();

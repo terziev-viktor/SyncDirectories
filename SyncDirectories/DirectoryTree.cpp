@@ -197,26 +197,12 @@ void dirtree::TreeComparingTable::LabelByHash()
 	}
 }
 
-void dirtree::TreeComparingTable::SortByHash(vector<string> & subdirs, size_t depth)
+void dirtree::TreeComparingTable::SortByHash(vector<string>& subdirs, size_t depth)
 {
-	// selection sort for now
-	int i, j, min_idx;
-
-	// One by one move boundary of unsorted subarray 
-	for (i = 0; i < subdirs.size() - 1; i++)
-	{
-		// Find the minimum element in unsorted array 
-		min_idx = i;
-		for (j = i + 1; j < subdirs.size(); j++)
-		{
-			if (this->CompareSubdirsByHash(subdirs[j], subdirs[min_idx], depth))
-			{
-				min_idx = j;
-			}
-		}
-		// Swap the found minimum element with the first element
-		iter_swap(subdirs.begin() + min_idx, subdirs.begin() + i);
-	}
+	TreeComparingTable* self = this;
+	std::sort(subdirs.begin(), subdirs.end(), [self, depth](const string& a, const string& b)->int {
+		return self->CompareSubdirsByHash(a, b, depth);
+	});
 }
 
 bool dirtree::TreeComparingTable::CompareSubdirsByHash(const string & a, const string & b, size_t depth)
