@@ -12,12 +12,12 @@ cmds::Move::Move()
 cmds::CommandResult cmds::Move::Execute(int argc, const char * argv[])
 {
 	std::string arg = argv[0];
-	// \some\path\to\file TO \other\path\to\file  # bla bla
+	// \some\path\to\file.abc TO \other\path\to\file.abc  # bla bla
 	std::string left, right;
-	size_t n = arg.find(' ');
+	size_t n = arg.find(" TO ");
 	left = arg.substr(0, n);
 	n += 4; // skipping "TO "
-	right = arg.substr(n, arg.find_first_of(" #\n", n) - n);
+	right = arg.substr(n, arg.find_first_of("#\n\r", n) - n);
 	if (!exists(left))
 	{
 		return CommandResult { false, left + " not found" };
@@ -40,7 +40,7 @@ cmds::CommandResult cmds::Move::Execute(int argc, const char * argv[])
 	};
 }
 
-cmds::Command * cmds::Move::Create()
+std::unique_ptr<cmds::Command> cmds::Move::Create()
 {
-	return new Move();
+	return std::make_unique<cmds::Move>();
 }

@@ -3,22 +3,9 @@
 using cmds::CommandExecutor;
 using cmds::CommandResult;
 
-CommandExecutor::CommandExecutor()
+void cmds::CommandExecutor::RegisterCommand(unique_ptr<Command> c)
 {
-
-}
-
-CommandExecutor::~CommandExecutor()
-{
-	for (size_t i = 0; i < this->commands.size(); ++i)
-	{
-		delete this->commands[i];
-	}
-}
-
-void cmds::CommandExecutor::RegisterCommand(Command * c)
-{
-	this->commands.push_back(c);
+	this->commands.push_back(std::move(c));
 }
 
 CommandResult cmds::CommandExecutor::Execute(const std::string & command, int argc, const char * argv[])

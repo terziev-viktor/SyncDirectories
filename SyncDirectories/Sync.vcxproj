@@ -144,6 +144,7 @@
     <ClInclude Include="GenerateHash.h" />
     <ClInclude Include="HashValue.h" />
     <ClInclude Include="Help.h" />
+    <ClInclude Include="Inputs.h" />
     <ClInclude Include="libs.h" />
     <ClInclude Include="Move.h" />
     <ClInclude Include="Perform.h" />

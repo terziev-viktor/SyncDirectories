@@ -19,12 +19,12 @@ Analyze::~Analyze()
 }
 
 // Recursively iterate a directory and create a tree comparing table
-void BuildTCT(TreeComparingTable & tct, const char * p)
+void BuildTCT(TreeComparingTable * tct, const char * p)
 {
-	tct.RelativeRootPath = p;
+	tct->RelativeRootPath = p;
 	recursive_directory_iterator end = recursive_directory_iterator();
 
-	for (auto i = recursive_directory_iterator(tct.RelativeRootPath); i != end; ++i)
+	for (auto i = recursive_directory_iterator(tct->RelativeRootPath); i != end; ++i)
 	{
 		int depth = i.depth() + 1; // the iterator counts in a retarded way
 
@@ -61,47 +61,59 @@ void BuildTCT(TreeComparingTable & tct, const char * p)
 			}
 
 			e.Date = last_write_time(e.FullPath);
-			tct.Files().PushBack(EntityInfo() =
+			tct->Files().PushBack(EntityInfo
 				{
 					e.Hash,
 					depth,
 					relativePathStr
 				});
 
-			tct.NthLevel(depth)[relativePathStr] = e;
+			tct->NthLevel(depth)[relativePathStr] = e;
 
 			// Every file is resposible for informing his parent for its existance
-			tct.NthLevel(depth - 1)[e.RelativePath.parent_path().string()].Subdirectories.push_back(relativePathStr);
+			tct->NthLevel(depth - 1)[e.RelativePath.parent_path().string()].Subdirectories.push_back(relativePathStr);
 		}
 		else
 		{
 			// Every folder is identified by its content and name.
 			// Because every file informs its parent for its existance 
 			// The folder will be built by the end of this loop
-			tct.NthLevel(depth)[relativePathStr] = e;
-			tct.NthLevel(depth - 1)[e.RelativePath.parent_path().string()].Subdirectories.push_back(relativePathStr);
+			tct->NthLevel(depth)[relativePathStr] = e;
+			tct->NthLevel(depth - 1)[e.RelativePath.parent_path().string()].Subdirectories.push_back(relativePathStr);
 		}
 	}
 }
 
-void BuildTCTs(TreeComparingTable & tctLeft, TreeComparingTable & tctRight, const char * argv[], size_t off)
+void BuildTCTs(TreeComparingTable * tctLeft, TreeComparingTable * tctRight, const char * argv[], size_t off)
 {
 	thread build_thread1(BuildTCT, tctLeft, argv[0 + off]);
 	thread build_thread2(BuildTCT, tctRight, argv[1 + off]);
 	
-	build_thread1.join();
+	if (build_thread1.joinable())
+	{
+		build_thread1.join();
+	}
 	// Labeling folders with hash of their contents
 	thread label_thread1(&TreeComparingTable::LabelByHash, tctLeft);
 
-	build_thread2.join();
+	if (build_thread2.joinable())
+	{
+		build_thread2.join();
+	}
 	thread label_thread2(&TreeComparingTable::LabelByHash, tctRight);
 	
-	label_thread1.join();
-	label_thread2.join();
+	if (label_thread1.joinable())
+	{
+		label_thread1.join();
+	}
+	if (label_thread2.joinable())
+	{
+		label_thread2.join();
+	}
 
 	if (Entity::HashOnly)
 	{
-		tctLeft.CheckIsomorphisSubtrees(tctRight);
+		tctLeft->CheckIsomorphisSubtrees(tctRight);
 	}
 }
 
@@ -218,7 +230,7 @@ CommandResult Analyze::Mirror(int argc, const char * argv[]) const
 	{
 		return r;
 	}
-	BuildTCTs(tctLeft, tctRight, argv, off);
+	BuildTCTs(&tctLeft, &tctRight, argv, off);
 
 	if (Entity::HashOnly && tctLeft.TreeRoot().Hash == tctRight.TreeRoot().Hash)
 	{
@@ -268,18 +280,18 @@ CommandResult Analyze::Mirror(int argc, const char * argv[]) const
 			}
 			if (!e.ShouldBeMovedTo.empty())
 			{
-				out << "MOVE " << e.FullPath << " TO " << tctRight.RelativeRootPath << '\\' << e.ShouldBeMovedTo << endl;
+				out << "MOVE " << e.FullPath << " TO " << tctRight.RelativeRootPath << '\\' << e.ShouldBeMovedTo << "\\" << e.Name << endl;
 			}
 			if (!e.ShouldBeRenamedTo.empty())
 			{
 				if (!e.ShouldBeMovedTo.empty())
 				{
-					out << "RENAME " << tctRight.RelativeRootPath << '\\' << e.ShouldBeMovedTo << " TO " << e.ShouldBeRenamedTo
+					out << "RENAME " << tctRight.RelativeRootPath << '\\' << e.ShouldBeMovedTo << "\\" << e.Name << " TO " << tctRight.RelativeRootPath << '\\' << e.ShouldBeMovedTo << "\\" << e.ShouldBeRenamedTo
 						<< " # Moved by the previus command" << endl;
 				}
 				else
 				{
-					out << "RENAME " << e.FullPath << " TO " << e.ShouldBeRenamedTo << endl;
+					out << "RENAME " << e.FullPath << " TO " << tctRight.RelativeRootPath << "\\" << e.RelativePath << "\\" << e.ShouldBeRenamedTo << endl;
 				}
 			}
 			if (e.ShouldBeDeleted)
@@ -311,7 +323,7 @@ CommandResult Analyze::Safe(int argc, const char * argv[]) const
 	{
 		return r;
 	}
-	BuildTCTs(tctLeft, tctRight, argv, off);
+	BuildTCTs(&tctLeft, &tctRight, argv, off);
 
 	if (Entity::HashOnly && tctLeft.TreeRoot().Hash == tctRight.TreeRoot().Hash)
 	{
@@ -373,18 +385,18 @@ CommandResult Analyze::Safe(int argc, const char * argv[]) const
 			}
 			if (!e.ShouldBeMovedTo.empty())
 			{
-				out << "MOVE " << e.FullPath << " TO " << tctRight.RelativeRootPath << '\\' << e.ShouldBeMovedTo << endl;
+				out << "MOVE " << e.FullPath << " TO " << tctRight.RelativeRootPath << '\\' << e.ShouldBeMovedTo << "\\" << e.Name << endl;
 			}
 			if (!e.ShouldBeRenamedTo.empty())
 			{
 				if (!e.ShouldBeMovedTo.empty())
 				{
-					out << "RENAME " << tctRight.RelativeRootPath << '\\' << e.ShouldBeMovedTo << " TO " << e.ShouldBeRenamedTo
+					out << "RENAME " << tctRight.RelativeRootPath << '\\' << e.ShouldBeMovedTo << "\\" << e.Name << " TO " << tctRight.RelativeRootPath << '\\' << e.ShouldBeMovedTo << "\\" << e.ShouldBeRenamedTo
 						<< " # Moved by the previous command" << endl;
 				}
 				else
 				{
-					out << "RENAME " << e.FullPath << " TO " << e.ShouldBeRenamedTo << endl;
+					out << "RENAME " << e.FullPath << " TO " << tctRight.RelativeRootPath << "\\" << e.RelativePath << "\\" << e.ShouldBeRenamedTo << endl;
 				}
 			}
 			if (e.ShouldBeDeleted)
@@ -411,7 +423,7 @@ CommandResult Analyze::Safe(int argc, const char * argv[]) const
 
 CommandResult Analyze::Standard(int argc, const char * argv[]) const
 {
-	TreeComparingTable tctLeft;
+	TreeComparingTable tctLeft;	
 	TreeComparingTable tctRight;
 	size_t off = 0;
 	CommandResult r = this->ReadOptions(argc, argv, off);
@@ -419,7 +431,7 @@ CommandResult Analyze::Standard(int argc, const char * argv[]) const
 	{
 		return r;
 	}
-	BuildTCTs(tctLeft, tctRight, argv, off);
+	BuildTCTs(&tctLeft, &tctRight, argv, off);
 
 	if (Entity::HashOnly && tctLeft.TreeRoot().Hash == tctRight.TreeRoot().Hash)
 	{
@@ -488,18 +500,18 @@ CommandResult Analyze::Standard(int argc, const char * argv[]) const
 			}
 			if (!e.ShouldBeMovedTo.empty())
 			{
-				out << "MOVE " << e.FullPath << " TO " << tctRight.RelativeRootPath << '\\' << e.ShouldBeMovedTo << endl;
+				out << "MOVE " << e.FullPath << " TO " << tctRight.RelativeRootPath << '\\' << e.ShouldBeMovedTo << "\\" << e.Name << endl;
 			}
 			if (!e.ShouldBeRenamedTo.empty())
 			{
 				if (!e.ShouldBeMovedTo.empty())
 				{
-					out << "RENAME " << tctRight.RelativeRootPath << '\\' << e.ShouldBeMovedTo << " TO " << e.ShouldBeRenamedTo
+					out << "RENAME " << tctRight.RelativeRootPath << '\\' << e.ShouldBeMovedTo << "\\" << e.Name << " TO " << tctRight.RelativeRootPath << '\\' << e.ShouldBeMovedTo << "\\" << e.ShouldBeRenamedTo
 						<< " # Moved by the previus command" << endl;
 				}
 				else
 				{
-					out << "RENAME " << e.FullPath << " TO " << e.ShouldBeRenamedTo << endl;
+					out << "RENAME " << e.FullPath << " TO " << tctRight.RelativeRootPath << "\\" << e.RelativePath << "\\" << e.ShouldBeRenamedTo << endl;
 				}
 			}
 			if (e.ShouldBeDeleted)
@@ -556,6 +568,7 @@ CommandResult cmds::Analyze::ReadOptions(int argc, const char * argv[], size_t &
 
 CommandResult Analyze::Execute(int argc, const char * argv[])
 {
+	std::cout << "Analyzing...\n";
 	if (strcmp(argv[0], "mirror") == 0)
 	{
 		return this->Mirror(argc - 1, argv + 1);
@@ -574,11 +587,11 @@ CommandResult Analyze::Execute(int argc, const char * argv[])
 	return CommandResult
 	{
 		false,
-		"This is not a command. Type sync.exe help for more details."
+		string(argv[0]) + " is not an analyze option. Type sync.exe help for more details."
 	};
 }
 
-Command * cmds::Analyze::Create()
+std::unique_ptr<Command> cmds::Analyze::Create()
 {
-	return new Analyze();
+	return std::make_unique<cmds::Analyze>();
 }

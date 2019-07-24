@@ -24,8 +24,10 @@ const char * GetToken(const char * str, const char delimeter)
 
 	return str;
 }
+
 CommandResult cmds::Perform::Execute(int argc, const char * argv[])
 {
+	std::cout << "Performing...\n";
 	if (argc < 1)
 	{
 		return CommandResult
@@ -105,7 +107,7 @@ CommandResult cmds::Perform::Execute(int argc, const char * argv[])
 	};
 }
 
-cmds::Command * cmds::Perform::Create()
+std::unique_ptr<cmds::Command> cmds::Perform::Create()
 {
-	return new Perform();
+	return std::make_unique<Perform>();
 }

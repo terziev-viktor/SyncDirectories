@@ -33,9 +33,9 @@ cmds::CommandResult cmds::DELETE::Execute(int argc, const char * argv[])
 	return CommandResult { true };
 }
 
-cmds::Command * cmds::DELETE::Create()
+std::unique_ptr<cmds::Command> cmds::DELETE::Create()
 {
-	return new DELETE();
+	return std::make_unique<DELETE>();
 }
 
 

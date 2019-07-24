@@ -32,7 +32,7 @@ CommandResult cmds::Help::Execute(int argc, const char * argv[])
 	};
 }
 
-Command * cmds::Help::Create()
+std::unique_ptr<Command> cmds::Help::Create()
 {
-	return new Help();
+	return std::make_unique<cmds::Help>();
 }

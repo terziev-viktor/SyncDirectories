@@ -213,12 +213,12 @@ bool dirtree::TreeComparingTable::CompareSubdirsByHash(const string & a, const s
 	return entity_a.Hash < entity_b.Hash;
 }
 
-void dirtree::TreeComparingTable::CheckIsomorphisSubtrees(TreeComparingTable & other)
+void dirtree::TreeComparingTable::CheckIsomorphisSubtrees(TreeComparingTable * other)
 {
 	for (size_t i = 0; i < this->size(); ++i)
 	{
 		Level & thisLvl = this->NthLevel(i);
-		Level & otherLvl = other.NthLevel(i);
+		Level & otherLvl = other->NthLevel(i);
 		
 		for (auto& j : thisLvl)
 		{

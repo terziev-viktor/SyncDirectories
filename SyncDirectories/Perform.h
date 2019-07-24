@@ -14,7 +14,7 @@ namespace cmds
 		// Inherited via Command
 		CommandResult Execute(int argc, const char * argv[]) override;
 
-		static Command * Create();
+		static std::unique_ptr<Command> Create();
 	};
 }
 

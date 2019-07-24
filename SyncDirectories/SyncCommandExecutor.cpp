@@ -11,8 +11,3 @@ SyncCommandExecutor::SyncCommandExecutor()
 	this->RegisterCommand(cmds::Perform::Create());
 }
 
-
-SyncCommandExecutor::~SyncCommandExecutor()
-{
-
-}

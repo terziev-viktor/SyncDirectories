@@ -11,7 +11,7 @@ void GenerateHashForFile(const string & path_to_file, uint32_t * hash_buffer)
 	std::ifstream ifs(path_to_file, std::ios::binary);
 	SHA1 sha;
 	{
-		std::unique_ptr<char> buff(new char[Entity::BlockSize]);
+		std::unique_ptr<char[]> buff = std::make_unique<char[]>(Entity::BlockSize);
 
 		while (!ifs.eof())
 		{
@@ -43,7 +43,7 @@ void GenerateHashForFile(const string & path_to_file, std::vector<HashValue> & h
 	uint32_t blockHash[5];
 
 	{
-		std::unique_ptr<char> buff(new char[Entity::BlockSize]);
+		std::unique_ptr<char[]> buff = std::make_unique<char[]>(Entity::BlockSize);
 
 		while (!ifs.eof())
 		{

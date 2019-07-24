@@ -93,7 +93,7 @@ public:
 
 	const T & operator[](size_t index) const
 	{
-		return (*this)[index];
+		return this->at(index);
 	}
 
 	T & operator[](size_t index)

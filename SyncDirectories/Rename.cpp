@@ -12,7 +12,7 @@ CommandResult cmds::Rename::Execute(int argc, const char * argv[])
 	return mv.Execute(argc, argv);
 }
 
-cmds::Command * cmds::Rename::Create()
+std::unique_ptr<cmds::Command> cmds::Rename::Create()
 {
-	return new Rename();
+	return std::make_unique<cmds::Rename>();
 }

@@ -6,6 +6,5 @@ class SyncCommandExecutor : public CommandExecutor
 {
 public:
 	SyncCommandExecutor();
-	~SyncCommandExecutor();
 };
 

@@ -56,17 +56,17 @@ cmds::CommandResult cmds::Copy::Execute(int argc, const char * argv[])
 		}
 	}
 
-	// \some\path\to\file FROM \other\path\to\file
-	size_t n = arg.find(' ');
+	// \some\path\to\some file FROM \some other\path\to\file
+	size_t n = arg.find(" FROM ");
 	std::string outFile = arg.substr(0, n);
 	n += 6; // skip from
-	std::string readFromFile = arg.substr(n, arg.find_first_of(" #\n", n) - n);
+	std::string readFromFile = arg.substr(n, arg.find_first_of("#\n\r", n) - n);
 	if (!exists(readFromFile))
 	{
 		return CommandResult
 		{
 			false,
-			string("Directory ") + readFromFile + string(" not found")
+			string("Directory ") + readFromFile + " not found"
 		};
 	}
 	if (!exists(outFile))
@@ -132,7 +132,7 @@ cmds::CommandResult cmds::Copy::Execute(int argc, const char * argv[])
 	};
 }
 
-cmds::Command * cmds::Copy::Create()
+std::unique_ptr<cmds::Command> cmds::Copy::Create()
 {
-	return new Copy();
+	return std::make_unique<Copy>();
 }

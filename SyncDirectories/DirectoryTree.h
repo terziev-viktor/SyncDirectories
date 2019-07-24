@@ -34,7 +34,7 @@ namespace dirtree
 		
 		// Checks subtrees on the same level and with the same hash
 		// If names or relative paths dont match <other>'s ShouldBeRenamedTo and ShouldBeMovedTo are changed
-		void CheckIsomorphisSubtrees(TreeComparingTable & other);
+		void CheckIsomorphisSubtrees(TreeComparingTable * other);
 
 		v1::path RelativeRootPath;
 

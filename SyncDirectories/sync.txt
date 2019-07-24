@@ -1,0 +1,3 @@
+hash-only not-block
+MOVE C:\Users\viktor.terziev\Desktop\Docs2\logs\Dialing Rules22.docx TO C:\Users\viktor.terziev\Desktop\Docs2\Manuals\Dialing Rules22.docx
+RENAME C:\Users\viktor.terziev\Desktop\Docs2\Manuals\Dialing Rules22.docx TO C:\Users\viktor.terziev\Desktop\Docs2\Manuals\Dialing Rules.docx # Moved by the previus command

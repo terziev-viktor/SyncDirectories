@@ -32,8 +32,8 @@ cmds::CommandResult cmds::CREATE::Execute(int argc, const char * argv[])
 	return CommandResult { true };
 }
 
-cmds::Command * cmds::CREATE::Create()
+std::unique_ptr<cmds::Command> cmds::CREATE::Create()
 {
-	return new CREATE();
+	return std::make_unique<CREATE>();
 }
 
